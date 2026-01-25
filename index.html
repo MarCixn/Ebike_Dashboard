@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=no" >
+    <title>Licznik rowerowy</title>
+    <style>
+        @font-face {
+            font-family: 'nothing';
+            src: url('nothing.ttf') format('truetype');
+        }
+        body{
+            background-color: #3D3D3D;
+            font-family: nothing;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin:0;
+            
+        }
+        .progress-container {
+            align-items: center;
+            justify-content: center;
+            height: 250px;
+        }
+
+        .SPEED-circle {
+            transition: stroke-dashoffset 0.4s linear;
+        }
+        .progress-text {
+            text-anchor: middle;
+            dominant-baseline: middle;
+            fill: #FFFFFF;
+        }
+        /* ------------------------GRID---------------------*/
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1.5fr 0.5fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            gap: 5px;
+            width: 100vw;
+            height: 95vh;
+        }
+        /*.item {
+            border: 2px solid black;
+            background-color: red;
+        }*/
+        /* Rozmieszczenie elementów według wzoru */
+        .item1 { grid-column: 1 / 2; grid-row: 1 / 5; }
+        .item2 { grid-column: 2 / 3; grid-row: 1 / 4; }
+        .item3 { grid-column: 3 / 4; grid-row: 1 / 3; }
+        .item4 { grid-column: 3 / 4; grid-row: 3 / 5; }
+        .item5 { grid-column: 2 / 3; grid-row: 4 / 5; }
+        .item6 { grid-column: 4 / 5; grid-row: 1 / 3; }
+        .item7 { grid-column: 4 / 5; grid-row: 3 / 5; }
+        /*--------------batery temp-------------------*/
+        .battemp-container {
+            margin-left: 10px;
+            margin-right: 10px;
+            width: 20px; /* Szerokość paska */
+            height: 100px; /* Wysokość paska */
+            background-color: #4e4e4e; /* Tło paska */
+            border-radius: 20px; /* Zaokrąglenie rogów */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .battemp-bar {
+            width: 100%;
+            background-color: white; /* Kolor wypełnienia */
+            position: absolute;
+            bottom: 0;
+            border-radius: 20px;
+            transition: height 0.1s ease-in-out, background-color 0.5s linear;
+        }
+        /*--------------slider maxspeed-------------------*/
+            .sliderspeed {
+            position: relative;
+            width: 250px; /* zmiana szerokosci */
+            height: 5px;  /* zmiana wysokosci 1/2 */
+            background: #4e4e4e;
+            border-radius: 5px;
+        }
+
+        .sliderspeedfill{
+            position: absolute;
+            height: 5px; /* zmiana wysokosci 2/2 */
+            background: white;
+            border-radius: 5px;
+            width: 0%;
+        }
+
+        .sliderspeedinput {
+            width: 250px;
+            appearance: none;
+            background: transparent;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 5px;
+            margin: 0;
+            cursor: pointer;
+            transform: translate(0, -20px), scale(1.2);
+        }
+
+        .sliderspeedinput::-webkit-slider-thumb {
+            appearance: none;
+            width: 0;
+            height: 0;
+        }
+
+
+        /*=================================================================*/
+        .sidenav {
+            height: 100%; /* 100% Full-height */
+            width: 0; /* 0 width - change this with JavaScript */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Stay on top */
+            top: 0; /* Stay at the top */
+            right: 0;
+            background-color: #111; /* Black*/
+            overflow-x: hidden; /* Disable horizontal scroll */
+            padding-top: 60px; /* Place content 60px from the top */
+            transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+         }
+
+            /* The navigation menu links */
+        .sidenav a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+            /* When you mouse over the navigation links, change their color */
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+            /* Position and style the close button (top right corner) */
+        .sidenav .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+            /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+        #main {
+            transition: margin-left .5s;
+            padding: 20px;
+        }
+
+            /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+        @media screen and (max-height: 450px) {
+            .sidenav {padding-top: 15px;}
+            .sidenav a {font-size: 18px;}
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-container">
+        <div class="item item1"><div style="float: left; margin-left: 20px; margin-right: 40px;" >
+            <svg width="170px" height="100px" viewBox="0 0 70 30" >
+                <text x="35" y="5" class="progress-text" font-size="6" >Engine:</text>
+                <rect x="0" y="10" width="70" height="0.3" fill="white" />
+                <text x="34" y="20" class="progress-text" id="tempENGINE" font-size="9"  >43&deg;c</text>
+            </svg>
+            <br>
+            <svg width="170px" height="100px" viewBox="0 0 70 30" >
+                <text x="35" y="5" class="progress-text" font-size="6" >Controller:</text>
+                <rect x="0" y="10" width="70" height="0.3" fill="white" />
+                <text x="34" y="20" class="progress-text" id="tempCONTROLLER" font-size="9"  >38&deg;c</text>
+            </svg>
+            <br>
+            <svg width="170px" height="100px" viewBox="0 0 70 30" >
+                <text x="35" y="5" class="progress-text" font-size="6" >Outdor:</text>
+                <rect x="0" y="10" width="70" height="0.3" fill="white" />
+                <text x="34" y="20" class="progress-text" id="tempOUTDOR" font-size="9"  >25&deg;c</text>
+            </svg>
+        </div></div>
+        <div class="item item2">
+            <div class="progress-container">
+                <svg width="250px" height="250px" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="#313131"  stroke="white" stroke-width="0.5"/>
+                    <!-- ozdoby biale -->
+                    <rect x="69.5" y="5" width="1" height="7" fill="white" />
+                    <rect x="69.5" y="128" width="1" height="7" fill="white" />
+                    <rect x="5" y="70" width="7" height="1" fill="white" />
+                    <rect x="128" y="70" width="7" height="1" fill="white" />
+                    <!--kola zielone -->
+                    <circle cx="70" cy="70" r="50" fill="#313131" stroke="#CFCFCF" stroke-width="5" />
+                    <circle class="SPEED-circle" cx="70" cy="70" r="50" fill="none" stroke="#4caf50" stroke-width="5" 
+                            stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(45, 70, 70)"  />
+                    <!-- ozdoby szare -->
+                    <rect x="67.5" y="16" width="5" height="8" fill="#313131" />
+                    <rect x="67.5" y="116" width="5" height="8" fill="#313131" />
+                    <rect x="116" y="68" width="8" height="5" fill="#313131" />
+                    <rect x="16" y="68" width="8" height="5" fill="#313131" />
+                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(45 70 70)"/>
+                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(135 70 70)"/>
+                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(225 70 70)"/>
+                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(315 70 70)"/>
+                    <!-- ozdoby koniec -->
+                    <text x="54" y="62" class="progress-text" id="progressSPEED" font-size="23" style="fill:#4caf50;" >100</text>
+                    <text x="85" y="64" class="progress-text" font-size="12" >KM/H</text>
+                    <text x="70" y="40" class="progress-text" font-size="7" >SPEED:</text>
+                    <text x="70" y="80" class="progress-text" font-size="7" >Current:</text>
+                    <rect x="47" y="85" width="45" height="0.3" fill="white" />
+                    <text x="70" y="97" class="progress-text" id="progressCURRENT" font-size="13" >4.2A</text>
+                </svg>
+            </div>
+        </div>
+        <div class="item item3">
+            <div style="margin-top: 20px;" >
+                <svg width="150px" height="150px" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="#313131"  stroke="white" stroke-width="0.5"/>
+                    <!--kola zielone -->
+                    <circle cx="70" cy="70" r="45" fill="#313131" stroke="#CFCFCF" stroke-width="10" />
+                    <circle class="BATT-circle" cx="70" cy="70" r="45" fill="none" stroke="#4caf50" stroke-width="10" 
+                            stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(45, 70, 70)" style=" transition: stroke 0.4s linear, stroke-dashoffset 0.4s linear; "  />
+                    <!-- ozdoby szare -->
+                    <rect x="64.5" y="19" width="10" height="12" fill="#313131" />
+                    <rect x="64.5" y="109" width="10" height="12" fill="#313131" />
+                    <rect x="109" y="64" width="12" height="10" fill="#313131" />
+                    <rect x="19" y="64" width="12" height="10" fill="#313131" />
+                    <rect x="19" y="64" width="12" height="10" fill="#313131" transform="rotate(225 70 70)"/>
+                    <!-- ozdoby koniec -->
+                    <text x="70" y="50" class="progress-text" font-size="7" >Battery:</text>
+                    <rect x="45" y="55" width="50" height="0.3" fill="white" />
+                    <text x="68" y="70" class="progress-text" id="progressBAT" font-size="10"  >72.4v</text>
+                    <text x="68" y="90" class="progress-text" id="progressBATPRO" font-size="10" style="fill:#4caf50;">100%</text>
+                </svg>
+            </div>
+        </div>
+        <div class="item item4">
+            <table style="margin-top: 20px;">
+                <tr style="text-align: right;">
+                    <td><div class="battemp-container"><div id="battempprogres1" class="battemp-bar" ></div></div></td>
+                    <td><div class="battemp-container"><div id="battempprogres2" class="battemp-bar" ></div></div></td>
+                    <td><div class="battemp-container"><div id="battempprogres3" class="battemp-bar" ></div></div></td>
+                <tr style="text-align: right;"><td><tempbat id="battemp1">--</tempbat>&deg;c</td><td><tempbat id="battemp2">--</tempbat>&deg;c</td><td><tempbat id="battemp3">--</tempbat>&deg;c</td></tr>
+
+            </table>
+            
+        </div>
+        <div style="padding-top: 20px;" class="item item5">
+            <table style="width: 250px;">
+                <tr style="text-align: center;"><td style="width: 120px;">2137 KM</td><td style="width: 10px;">|</td><td style="width: 120px;">12 KM</td></tr>
+            </table>
+            <div class="sliderspeed">
+                <span class="sliderspeedfill" id="fill"></span>
+                <input class="sliderspeedinput" type="range" min="0" max="100" value="25" id="slider" oninput="updatefill(this.value)">
+            </div>
+            <table style="width: 250px;">
+                <tr style="text-align: center;"><td style="width: 120px; font-size: 12px;">MAX SPEED: 90 KM/H</td><td style="width: 10px;">|</td><td style="width: 120px; font-size: 12px;" id="setmaxspeed">SET MAX: -- KM/H</td></tr>
+            </table>
+        </div>
+        <div class="item item6">
+            <span onclick="openNav()">menu</span>
+            
+            
+        </div>
+        <div class="item item7"></div>
+    </div>
+    <input type="range" id="slider" min="0" max="100" value="0" oninput="updateSPEED(this.value)" hidden> </br>
+    <input type="range" id="slider" min="0" max="200" step="0.01" value="0" oninput="updateCURRENT(this.value)" hidden>
+    <input type="range" id="slider" min="0" max="100" value="0" oninput="updateBATPRO(this.value)" hidden>
+    <input type="range" id="slider" min="0" max="150" value="0" oninput="updateTEMPBAT1(this.value)" hidden>
+    <input type="range" id="slider" min="0" max="150" value="0" oninput="updateTEMPBAT2(this.value)" hidden>
+    <input type="range" id="slider" min="0" max="150" value="0" oninput="updateTEMPBAT3(this.value)" hidden>
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="#" id="mahperkm">mAh/km: --</a>
+        <a href="#">About</a>
+        <a href="#">Services</a>
+        <a href="#">Clients</a>
+        <a href="#">Contact</a>
+      </div>
+      
+    
+    <!-- Suwak -->
+
+    <script>
+        //progressSPEED - predkosc
+        //progressBAT - bateria
+        //progressBATPRO - bateria procent
+        //progressBATvoltage - napiecie baterii
+        //progressCURRENT - ilosc amper
+        //tempENGINE - temp silnika
+        //tempCONTROLLER - temp kontrolera
+        //tempOUTDOR - temp na zewn.
+        //tempBAT1 - temp baterii
+        //tempBAT2 - temp baterii
+        //tempBAT3 - temp baterii
+        //-------------------------KOLO SPEED --------------------------------
+        const circle = document.querySelector(".SPEED-circle");
+        const progressSPEED = document.getElementById("progressSPEED");
+        const circleLength = 2 * Math.PI * 50; // Obwód koła (2πr)
+
+        function updateSPEED(value) {
+            let offset = -circleLength * (1 - value / 100);
+            circle.style.strokeDashoffset = offset;
+            progressSPEED.textContent = value + "";
+        }
+        function updateCURRENT(value) {
+            progressCURRENT.textContent = value + " A";
+        }
+        //-------------------------KOLO SPEED --------------------------------
+        const circleBAT = document.querySelector(".BATT-circle");
+        const progressBATTPRO = document.getElementById("progressBATPRO");
+        const progressBATT = document.getElementById("progressBAT");
+        const circleBATLength = 2 * Math.PI * 45; // Obwód koła (2πr)
+        
+        function updateBATPRO(value) {
+            if (value < 20){
+                circleBAT.setAttribute("stroke", "red");
+            }
+            else if (value < 40){
+                circleBAT.setAttribute("stroke", "orange");
+            } else{
+                circleBAT.setAttribute("stroke", "#4caf50");
+            }
+            let offset = -circleBATLength * (1 - value / 100);
+            circleBAT.style.strokeDashoffset = offset;
+            progressBATTPRO.textContent = value + "%";
+            progressBATT.textContent = value + "v";
+        }
+        //-------------------------BATTEMP --------------------------------
+        const battemp1 = document.getElementById("battemp1");
+        const battemp2 = document.getElementById("battemp2");
+        const battemp3 = document.getElementById("battemp3");
+        const battempprogres1 = document.getElementById("battempprogres1");
+        const battempprogres2 = document.getElementById("battempprogres2");
+        const battempprogres3 = document.getElementById("battempprogres3");
+        function updateTEMPBAT1(value) {
+            battempprogres1.style.height = value*1.5 + "%";
+            battemp1.textContent = value;
+            if(value > 49) {battempprogres1.style.backgroundColor = "red";}
+            else if (value > 39){battempprogres1.style.backgroundColor = "orange";}
+            else {battempprogres1.style.backgroundColor = "white";}
+        }
+        function updateTEMPBAT2(value) {
+            battempprogres2.style.height = value*1.5 + "%";
+            battemp2.textContent = value;
+            if(value > 50) {battempprogres2.style.backgroundColor = "red";}
+            else if (value > 40){battempprogres2.style.backgroundColor = "orange";}
+            else {battempprogres2.style.backgroundColor = "white";}
+        }
+        function updateTEMPBAT3(value) {
+            battempprogres3.style.height = value*1.5 + "%";
+            battemp3.textContent = value;
+            if(value > 50) {battempprogres3.style.backgroundColor = "red";}
+            else if (value > 40){battempprogres3.style.backgroundColor = "orange";}
+            else {battempprogres3.style.backgroundColor = "white";}
+        }
+
+        //-------------------------SliderSpeed --------------------------------
+        let slider = document.getElementById("slider");
+        let fill = document.getElementById("fill");
+        let setmaxspeed = document.getElementById("setmaxspeed");
+        function updatefill(value){
+            fill.style.width = value + "%";
+            if(value > 99){
+                setmaxspeed.textContent = "SET MAX: OFF"
+            } else if(value < 2) {
+                setmaxspeed.textContent = "SET MAX: OFF"
+            } else{
+                setmaxspeed.textContent = "SET MAX: " + value + " KM/H"
+            }
+        }
+        //-------------------------Slidernav --------------------------------
+        function openNav() {
+            document.getElementById("mySidenav").style.width = "250px";
+        }
+        const mahperkm = document.getElementById("mahperkm");
+        function updatemahperkm(value) {
+            mahperkm.textContent = "mAh/km: " + value;
+        }
+        /* Set the width of the side navigation to 0 */
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+        }
+        setInterval(function() {
+            location.reload(); // Odświeżenie strony
+        }, 2000000); // 1000 ms = 1 sekunda
+    </script>
+
+</body>
+</html>
