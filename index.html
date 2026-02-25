@@ -263,6 +263,8 @@
         </div>
         <div class="item item6">
             <span onclick="openNav()">menu</span>
+            <br><br>
+            <span onclick="connectBLE()" id="bleStatus" style="cursor:pointer;">Connect BLE</span>
             
             
         </div>
@@ -389,6 +391,113 @@
         setInterval(function() {
             location.reload(); // Odświeżenie strony
         }, 2000000); // 1000 ms = 1 sekunda
+
+        //-------------------------WEB BLUETOOTH --------------------------------
+        const EBIKE_SERVICE_UUID = '12345678-1234-5678-1234-56789abcdef0';
+        const SPEED_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef1';
+        const CURRENT_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef2';
+        const BATTERY_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef3';
+        const TEMPS_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef4';
+        const MAXSPEED_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef5';
+
+        let bleDevice = null;
+        let bleServer = null;
+        let ebikeService = null;
+
+        async function connectBLE() {
+            try {
+                document.getElementById('bleStatus').textContent = 'Connecting...';
+
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: 'Ebike' }],
+                    optionalServices: [EBIKE_SERVICE_UUID]
+                });
+
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+                bleServer = await bleDevice.gatt.connect();
+                ebikeService = await bleServer.getPrimaryService(EBIKE_SERVICE_UUID);
+
+                // Subscribe to notifications
+                await subscribeToCharacteristic(SPEED_CHAR_UUID, handleSpeed);
+                await subscribeToCharacteristic(CURRENT_CHAR_UUID, handleCurrent);
+                await subscribeToCharacteristic(BATTERY_CHAR_UUID, handleBattery);
+                await subscribeToCharacteristic(TEMPS_CHAR_UUID, handleTemps);
+
+                document.getElementById('bleStatus').textContent = 'Connected!';
+                document.getElementById('bleStatus').style.color = '#4caf50';
+
+            } catch (error) {
+                console.error('BLE Error:', error);
+                document.getElementById('bleStatus').textContent = 'Connect BLE';
+            }
+        }
+
+        async function subscribeToCharacteristic(uuid, handler) {
+            const characteristic = await ebikeService.getCharacteristic(uuid);
+            await characteristic.startNotifications();
+            characteristic.addEventListener('characteristicvaluechanged', handler);
+        }
+
+        function onDisconnected() {
+            document.getElementById('bleStatus').textContent = 'Disconnected - Click to reconnect';
+            document.getElementById('bleStatus').style.color = 'red';
+        }
+
+        function handleSpeed(event) {
+            const value = event.target.value.getUint8(0);
+            updateSPEED(value);
+        }
+
+        function handleCurrent(event) {
+            const value = event.target.value.getUint16(0, true) / 100;
+            updateCURRENT(value.toFixed(2));
+        }
+
+        function handleBattery(event) {
+            const voltage = event.target.value.getUint16(0, true) / 100;
+            const percent = event.target.value.getUint8(2);
+            updateBATPRO(percent);
+            progressBATT.textContent = voltage.toFixed(1) + "v";
+        }
+
+        function handleTemps(event) {
+            const data = event.target.value;
+            const tempEngine = data.getInt8(0);
+            const tempController = data.getInt8(1);
+            const tempOutdoor = data.getInt8(2);
+            const tempBat1 = data.getInt8(3);
+            const tempBat2 = data.getInt8(4);
+            const tempBat3 = data.getInt8(5);
+
+            document.getElementById('tempENGINE').innerHTML = tempEngine + '&deg;c';
+            document.getElementById('tempCONTROLLER').innerHTML = tempController + '&deg;c';
+            document.getElementById('tempOUTDOR').innerHTML = tempOutdoor + '&deg;c';
+            updateTEMPBAT1(tempBat1);
+            updateTEMPBAT2(tempBat2);
+            updateTEMPBAT3(tempBat3);
+        }
+
+        // Send max speed to nRF52
+        async function sendMaxSpeed(value) {
+            if (!ebikeService) return;
+            try {
+                const characteristic = await ebikeService.getCharacteristic(MAXSPEED_CHAR_UUID);
+                await characteristic.writeValue(new Uint8Array([value]));
+                console.log('Max speed sent:', value);
+            } catch (error) {
+                console.error('Error sending max speed:', error);
+            }
+        }
+
+        // Update slider to send max speed
+        const originalUpdateFill = updatefill;
+        updatefill = function(value) {
+            originalUpdateFill(value);
+            if (ebikeService) {
+                sendMaxSpeed(parseInt(value));
+            }
+        };
     </script>
 
 </body>
