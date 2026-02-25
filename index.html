@@ -373,6 +373,75 @@
             padding: 10px;
         }
 
+        /* ==================== BLE BUTTON ==================== */
+        .ble-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 25px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            z-index: 100;
+            transition: background 0.2s;
+        }
+
+        .ble-button:hover {
+            background: #333;
+        }
+
+        .ble-button.connected {
+            border-color: #4caf50;
+        }
+
+        .ble-dot {
+            width: 10px;
+            height: 10px;
+            background: #ff4444;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .ble-button.connected .ble-dot {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        /* Menu button */
+        .menu-button {
+            position: fixed;
+            top: 20px;
+            right: 120px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 20px;
+        }
+
+        .menu-button:hover {
+            background: #333;
+        }
+
+        @media (max-width: 767px) {
+            .ble-button {
+                display: none;
+            }
+            .menu-button {
+                display: none;
+            }
+        }
+
         /* ==================== GEAR DISPLAY ==================== */
         .gear-display {
             position: fixed;
@@ -819,6 +888,15 @@
             </div>
         </div>
     </div>
+
+    <!-- BLE BUTTON (desktop) -->
+    <div class="ble-button" id="bleButton" onclick="connectBLE()">
+        <div class="ble-dot" id="bleButtonDot"></div>
+        <span id="bleButtonText">BLE</span>
+    </div>
+
+    <!-- MENU BUTTON (desktop) -->
+    <div class="menu-button" onclick="openNav()">☰</div>
 
     <!-- GEAR CONTROL -->
     <div class="gear-display">
@@ -1313,7 +1391,11 @@
                 updateBLEStatus('connecting');
 
                 bleDevice = await navigator.bluetooth.requestDevice({
-                    filters: [{ name: 'Ebike' }],
+                    filters: [
+                        { name: 'Ebike' },
+                        { namePrefix: 'Ebike' },
+                        { services: [EBIKE_SERVICE_UUID] }
+                    ],
                     optionalServices: [EBIKE_SERVICE_UUID]
                 });
 
@@ -1350,20 +1432,31 @@
             const dot = document.getElementById('bleDot');
             const text = document.getElementById('bleStatus');
             const menuText = document.getElementById('bleStatusMenu');
+            const bleButton = document.getElementById('bleButton');
+            const bleButtonText = document.getElementById('bleButtonText');
 
             if (status === 'connected') {
-                dot.classList.remove('disconnected');
-                text.textContent = 'Connected';
-                text.classList.add('connected');
+                if (dot) dot.classList.remove('disconnected');
+                if (text) {
+                    text.textContent = 'Connected';
+                    text.classList.add('connected');
+                }
                 if (menuText) menuText.textContent = 'Connected';
+                if (bleButton) bleButton.classList.add('connected');
+                if (bleButtonText) bleButtonText.textContent = 'Connected';
             } else if (status === 'connecting') {
-                text.textContent = 'Connecting...';
+                if (text) text.textContent = 'Connecting...';
                 if (menuText) menuText.textContent = 'Connecting...';
+                if (bleButtonText) bleButtonText.textContent = 'Connecting...';
             } else {
-                dot.classList.add('disconnected');
-                text.textContent = 'Connect';
-                text.classList.remove('connected');
+                if (dot) dot.classList.add('disconnected');
+                if (text) {
+                    text.textContent = 'Connect';
+                    text.classList.remove('connected');
+                }
                 if (menuText) menuText.textContent = 'Disconnected';
+                if (bleButton) bleButton.classList.remove('connected');
+                if (bleButtonText) bleButtonText.textContent = 'BLE';
             }
         }
 
