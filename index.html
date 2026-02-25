@@ -2,397 +2,1301 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=no" >
-    <title>Licznik rowerowy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ebike Dashboard</title>
     <style>
         @font-face {
             font-family: 'nothing';
             src: url('nothing.ttf') format('truetype');
         }
-        body{
-            background-color: #3D3D3D;
-            font-family: nothing;
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            font-family: 'nothing', sans-serif;
             color: #FFFFFF;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ==================== MAIN LAYOUT ==================== */
+        .dashboard {
+            display: grid;
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
+            /* Mobile: single column */
+            grid-template-columns: 1fr;
+            grid-template-areas:
+                "header"
+                "speed"
+                "battery"
+                "temps"
+                "controls"
+                "stats";
+        }
+
+        /* Tablet/Desktop landscape */
+        @media (min-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr 2fr 1.5fr;
+                grid-template-rows: auto auto auto;
+                grid-template-areas:
+                    "temps speed battery"
+                    "temps speed battemps"
+                    "controls controls stats";
+            }
+        }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            grid-area: header;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        @media (min-width: 768px) {
+            .header {
+                display: none;
+            }
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .dot.disconnected {
+            background: #ff4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .ble-status {
+            font-size: 12px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .ble-status.connected {
+            color: #4caf50;
+        }
+
+        .menu-btn {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        /* ==================== SPEED GAUGE ==================== */
+        .speed-section {
+            grid-area: speed;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin:0;
-            
+            padding: 10px;
         }
-        .progress-container {
-            align-items: center;
-            justify-content: center;
-            height: 250px;
+
+        .speed-gauge {
+            position: relative;
+            width: min(280px, 80vw);
+            height: min(280px, 80vw);
+        }
+
+        @media (min-width: 768px) {
+            .speed-gauge {
+                width: 280px;
+                height: 280px;
+            }
+        }
+
+        .speed-gauge svg {
+            width: 100%;
+            height: 100%;
         }
 
         .SPEED-circle {
             transition: stroke-dashoffset 0.4s linear;
         }
+
         .progress-text {
             text-anchor: middle;
             dominant-baseline: middle;
             fill: #FFFFFF;
         }
-        /* ------------------------GRID---------------------*/
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 2fr 1.5fr 0.5fr;
-            grid-template-rows: 1fr 1fr 1fr 1fr;
-            gap: 5px;
-            width: 100vw;
-            height: 95vh;
+
+        /* ==================== BATTERY ==================== */
+        .battery-section {
+            grid-area: battery;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
         }
-        /*.item {
-            border: 2px solid black;
-            background-color: red;
-        }*/
-        /* Rozmieszczenie elementów według wzoru */
-        .item1 { grid-column: 1 / 2; grid-row: 1 / 5; }
-        .item2 { grid-column: 2 / 3; grid-row: 1 / 4; }
-        .item3 { grid-column: 3 / 4; grid-row: 1 / 3; }
-        .item4 { grid-column: 3 / 4; grid-row: 3 / 5; }
-        .item5 { grid-column: 2 / 3; grid-row: 4 / 5; }
-        .item6 { grid-column: 4 / 5; grid-row: 1 / 3; }
-        .item7 { grid-column: 4 / 5; grid-row: 3 / 5; }
-        /*--------------batery temp-------------------*/
+
+        .battery-gauge {
+            width: min(150px, 40vw);
+            height: min(150px, 40vw);
+        }
+
+        @media (min-width: 768px) {
+            .battery-gauge {
+                width: 160px;
+                height: 160px;
+            }
+        }
+
+        .battery-gauge svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .BATT-circle {
+            transition: stroke 0.4s linear, stroke-dashoffset 0.4s linear;
+        }
+
+        /* ==================== TEMPERATURES ==================== */
+        .temps-section {
+            grid-area: temps;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .temps-section {
+                flex-direction: column;
+                justify-content: center;
+                gap: 20px;
+            }
+        }
+
+        .temp-item {
+            text-align: center;
+        }
+
+        .temp-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .temp-line {
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #444, transparent);
+            margin: 5px auto;
+        }
+
+        .temp-value {
+            font-size: 18px;
+        }
+
+        @media (min-width: 768px) {
+            .temp-label { font-size: 12px; }
+            .temp-value { font-size: 24px; }
+            .temp-line { width: 80px; }
+        }
+
+        /* ==================== BATTERY TEMPS ==================== */
+        .battemps-section {
+            grid-area: battemps;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .battemps-section {
+                display: flex;
+            }
+        }
+
+        /* Mobile: show in temps section */
+        .battemps-mobile {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .battemps-mobile {
+                display: none;
+            }
+        }
+
         .battemp-container {
-            margin-left: 10px;
-            margin-right: 10px;
-            width: 20px; /* Szerokość paska */
-            height: 100px; /* Wysokość paska */
-            background-color: #4e4e4e; /* Tło paska */
-            border-radius: 20px; /* Zaokrąglenie rogów */
+            width: 20px;
+            height: 80px;
+            background-color: #2a2a2a;
+            border-radius: 10px;
             position: relative;
             overflow: hidden;
+            border: 1px solid #333;
         }
 
         .battemp-bar {
             width: 100%;
-            background-color: white; /* Kolor wypełnienia */
+            background-color: white;
             position: absolute;
             bottom: 0;
-            border-radius: 20px;
-            transition: height 0.1s ease-in-out, background-color 0.5s linear;
+            border-radius: 10px;
+            transition: height 0.3s ease, background-color 0.3s ease;
         }
-        /*--------------slider maxspeed-------------------*/
-            .sliderspeed {
+
+        .battemp-value {
+            font-size: 10px;
+            text-align: center;
+            margin-top: 5px;
+            color: #888;
+        }
+
+        /* ==================== CONTROLS ==================== */
+        .controls-section {
+            grid-area: controls;
+            padding: 15px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .distance-display {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .distance-item {
+            text-align: center;
+        }
+
+        .distance-label {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .distance-value {
+            font-size: 16px;
+        }
+
+        .slider-container {
             position: relative;
-            width: 250px; /* zmiana szerokosci */
-            height: 5px;  /* zmiana wysokosci 1/2 */
-            background: #4e4e4e;
-            border-radius: 5px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
         }
 
-        .sliderspeedfill{
+        .slider-track {
+            height: 4px;
+            background: #2a2a2a;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .slider-fill {
             position: absolute;
-            height: 5px; /* zmiana wysokosci 2/2 */
-            background: white;
-            border-radius: 5px;
-            width: 0%;
+            height: 100%;
+            background: #4caf50;
+            border-radius: 2px;
+            transition: width 0.1s ease;
         }
 
-        .sliderspeedinput {
-            width: 250px;
+        .slider-input {
+            width: 100%;
             appearance: none;
             background: transparent;
             position: absolute;
-            top: 0;
+            top: -8px;
             left: 0;
-            height: 5px;
+            height: 20px;
             margin: 0;
             cursor: pointer;
-            transform: translate(0, -20px), scale(1.2);
         }
 
-        .sliderspeedinput::-webkit-slider-thumb {
+        .slider-input::-webkit-slider-thumb {
             appearance: none;
-            width: 0;
-            height: 0;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #666;
+        }
 
-        /*=================================================================*/
+        /* ==================== STATS ==================== */
+        .stats-section {
+            grid-area: stats;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 10px;
+        }
+
+        /* ==================== GEAR DISPLAY ==================== */
+        .gear-display {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 15px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .gear-btn {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .gear-btn:active {
+            background: #4caf50;
+        }
+
+        .gear-number {
+            font-size: 28px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        /* ==================== PANIC BUTTON ==================== */
+        .panic-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #ff4444;
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 10px;
+            font-family: 'nothing', sans-serif;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .panic-btn:active {
+            transform: scale(0.95);
+        }
+
+        .panic-btn.active {
+            background: #ff8800;
+            animation: panic-pulse 1s infinite;
+        }
+
+        @keyframes panic-pulse {
+            0%, 100% { box-shadow: 0 4px 15px rgba(255, 136, 0, 0.4); }
+            50% { box-shadow: 0 4px 25px rgba(255, 136, 0, 0.8); }
+        }
+
+        /* ==================== SIDE MENU ==================== */
         .sidenav {
-            height: 100%; /* 100% Full-height */
-            width: 0; /* 0 width - change this with JavaScript */
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Stay on top */
-            top: 0; /* Stay at the top */
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 200;
+            top: 0;
             right: 0;
-            background-color: #111; /* Black*/
-            overflow-x: hidden; /* Disable horizontal scroll */
-            padding-top: 60px; /* Place content 60px from the top */
-            transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
-         }
-
-            /* The navigation menu links */
-        .sidenav a {
-            padding: 8px 8px 8px 32px;
-            text-decoration: none;
-            font-size: 25px;
-            color: #818181;
-            display: block;
+            background-color: #111;
+            overflow-x: hidden;
+            overflow-y: auto;
             transition: 0.3s;
+            padding-top: 60px;
         }
 
-            /* When you mouse over the navigation links, change their color */
-        .sidenav a:hover {
-            color: #f1f1f1;
+        .sidenav-content {
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-            /* Position and style the close button (top right corner) */
+        .sidenav.open .sidenav-content {
+            opacity: 1;
+        }
+
         .sidenav .closebtn {
             position: absolute;
-            top: 0;
-            right: 25px;
+            top: 10px;
+            right: 20px;
             font-size: 36px;
-            margin-left: 50px;
+            cursor: pointer;
+            color: #888;
         }
 
-            /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
-        #main {
-            transition: margin-left .5s;
-            padding: 20px;
+        .settings-section {
+            margin-bottom: 30px;
         }
 
-            /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
-        @media screen and (max-height: 450px) {
-            .sidenav {padding-top: 15px;}
-            .sidenav a {font-size: 18px;}
+        .settings-title {
+            font-size: 14px;
+            color: #4caf50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .settings-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .settings-value {
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .settings-input {
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: 'nothing', sans-serif;
+            width: 100px;
+            text-align: right;
+        }
+
+        .settings-btn {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-family: 'nothing', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .settings-btn:active {
+            background: #4caf50;
+        }
+
+        .settings-btn.danger {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .settings-btn.danger:active {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        /* Toggle switch */
+        .toggle {
+            width: 50px;
+            height: 26px;
+            background: #333;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #4caf50;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active::after {
+            transform: translateX(24px);
+        }
+
+        /* ==================== LOCK SCREEN ==================== */
+        .lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            z-index: 300;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lock-screen.active {
+            display: flex;
+        }
+
+        .lock-icon {
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+
+        .pin-display {
+            font-size: 32px;
+            letter-spacing: 10px;
+            margin-bottom: 30px;
+            min-height: 40px;
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            gap: 15px;
+        }
+
+        .pin-btn {
+            width: 70px;
+            height: 70px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 24px;
+            font-family: 'nothing', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .pin-btn:active {
+            background: #4caf50;
+        }
+
+        /* ==================== NOTHING STYLE DOTS ==================== */
+        .nothing-dots {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .nothing-dot {
+            width: 4px;
+            height: 4px;
+            background: #444;
+            border-radius: 50%;
+        }
+
+        .nothing-dot.active {
+            background: #4caf50;
         }
     </style>
 </head>
 <body>
-    <div class="grid-container">
-        <div class="item item1"><div style="float: left; margin-left: 20px; margin-right: 40px;" >
-            <svg width="170px" height="100px" viewBox="0 0 70 30" >
-                <text x="35" y="5" class="progress-text" font-size="6" >Engine:</text>
-                <rect x="0" y="10" width="70" height="0.3" fill="white" />
-                <text x="34" y="20" class="progress-text" id="tempENGINE" font-size="9"  >43&deg;c</text>
-            </svg>
-            <br>
-            <svg width="170px" height="100px" viewBox="0 0 70 30" >
-                <text x="35" y="5" class="progress-text" font-size="6" >Controller:</text>
-                <rect x="0" y="10" width="70" height="0.3" fill="white" />
-                <text x="34" y="20" class="progress-text" id="tempCONTROLLER" font-size="9"  >38&deg;c</text>
-            </svg>
-            <br>
-            <svg width="170px" height="100px" viewBox="0 0 70 30" >
-                <text x="35" y="5" class="progress-text" font-size="6" >Outdor:</text>
-                <rect x="0" y="10" width="70" height="0.3" fill="white" />
-                <text x="34" y="20" class="progress-text" id="tempOUTDOR" font-size="9"  >25&deg;c</text>
-            </svg>
-        </div></div>
-        <div class="item item2">
-            <div class="progress-container">
-                <svg width="250px" height="250px" viewBox="0 0 140 140">
-                    <circle cx="70" cy="70" r="60" fill="#313131"  stroke="white" stroke-width="0.5"/>
-                    <!-- ozdoby biale -->
-                    <rect x="69.5" y="5" width="1" height="7" fill="white" />
-                    <rect x="69.5" y="128" width="1" height="7" fill="white" />
-                    <rect x="5" y="70" width="7" height="1" fill="white" />
-                    <rect x="128" y="70" width="7" height="1" fill="white" />
-                    <!--kola zielone -->
-                    <circle cx="70" cy="70" r="50" fill="#313131" stroke="#CFCFCF" stroke-width="5" />
-                    <circle class="SPEED-circle" cx="70" cy="70" r="50" fill="none" stroke="#4caf50" stroke-width="5" 
-                            stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(45, 70, 70)"  />
-                    <!-- ozdoby szare -->
-                    <rect x="67.5" y="16" width="5" height="8" fill="#313131" />
-                    <rect x="67.5" y="116" width="5" height="8" fill="#313131" />
-                    <rect x="116" y="68" width="8" height="5" fill="#313131" />
-                    <rect x="16" y="68" width="8" height="5" fill="#313131" />
-                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(45 70 70)"/>
-                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(135 70 70)"/>
-                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(225 70 70)"/>
-                    <rect x="16" y="68" width="8" height="5" fill="#313131" transform="rotate(315 70 70)"/>
-                    <!-- ozdoby koniec -->
-                    <text x="54" y="62" class="progress-text" id="progressSPEED" font-size="23" style="fill:#4caf50;" >100</text>
-                    <text x="85" y="64" class="progress-text" font-size="12" >KM/H</text>
-                    <text x="70" y="40" class="progress-text" font-size="7" >SPEED:</text>
-                    <text x="70" y="80" class="progress-text" font-size="7" >Current:</text>
-                    <rect x="47" y="85" width="45" height="0.3" fill="white" />
-                    <text x="70" y="97" class="progress-text" id="progressCURRENT" font-size="13" >4.2A</text>
-                </svg>
-            </div>
+    <!-- LOCK SCREEN -->
+    <div class="lock-screen" id="lockScreen">
+        <div class="lock-icon">🔒</div>
+        <div class="pin-display" id="pinDisplay"></div>
+        <div class="pin-pad">
+            <button class="pin-btn" onclick="enterPin(1)">1</button>
+            <button class="pin-btn" onclick="enterPin(2)">2</button>
+            <button class="pin-btn" onclick="enterPin(3)">3</button>
+            <button class="pin-btn" onclick="enterPin(4)">4</button>
+            <button class="pin-btn" onclick="enterPin(5)">5</button>
+            <button class="pin-btn" onclick="enterPin(6)">6</button>
+            <button class="pin-btn" onclick="enterPin(7)">7</button>
+            <button class="pin-btn" onclick="enterPin(8)">8</button>
+            <button class="pin-btn" onclick="enterPin(9)">9</button>
+            <button class="pin-btn" onclick="clearPin()">C</button>
+            <button class="pin-btn" onclick="enterPin(0)">0</button>
+            <button class="pin-btn" onclick="submitPin()">OK</button>
         </div>
-        <div class="item item3">
-            <div style="margin-top: 20px;" >
-                <svg width="150px" height="150px" viewBox="0 0 140 140">
-                    <circle cx="70" cy="70" r="60" fill="#313131"  stroke="white" stroke-width="0.5"/>
-                    <!--kola zielone -->
-                    <circle cx="70" cy="70" r="45" fill="#313131" stroke="#CFCFCF" stroke-width="10" />
-                    <circle class="BATT-circle" cx="70" cy="70" r="45" fill="none" stroke="#4caf50" stroke-width="10" 
-                            stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(45, 70, 70)" style=" transition: stroke 0.4s linear, stroke-dashoffset 0.4s linear; "  />
-                    <!-- ozdoby szare -->
-                    <rect x="64.5" y="19" width="10" height="12" fill="#313131" />
-                    <rect x="64.5" y="109" width="10" height="12" fill="#313131" />
-                    <rect x="109" y="64" width="12" height="10" fill="#313131" />
-                    <rect x="19" y="64" width="12" height="10" fill="#313131" />
-                    <rect x="19" y="64" width="12" height="10" fill="#313131" transform="rotate(225 70 70)"/>
-                    <!-- ozdoby koniec -->
-                    <text x="70" y="50" class="progress-text" font-size="7" >Battery:</text>
-                    <rect x="45" y="55" width="50" height="0.3" fill="white" />
-                    <text x="68" y="70" class="progress-text" id="progressBAT" font-size="10"  >72.4v</text>
-                    <text x="68" y="90" class="progress-text" id="progressBATPRO" font-size="10" style="fill:#4caf50;">100%</text>
-                </svg>
-            </div>
-        </div>
-        <div class="item item4">
-            <table style="margin-top: 20px;">
-                <tr style="text-align: right;">
-                    <td><div class="battemp-container"><div id="battempprogres1" class="battemp-bar" ></div></div></td>
-                    <td><div class="battemp-container"><div id="battempprogres2" class="battemp-bar" ></div></div></td>
-                    <td><div class="battemp-container"><div id="battempprogres3" class="battemp-bar" ></div></div></td>
-                <tr style="text-align: right;"><td><tempbat id="battemp1">--</tempbat>&deg;c</td><td><tempbat id="battemp2">--</tempbat>&deg;c</td><td><tempbat id="battemp3">--</tempbat>&deg;c</td></tr>
-
-            </table>
-            
-        </div>
-        <div style="padding-top: 20px;" class="item item5">
-            <table style="width: 250px;">
-                <tr style="text-align: center;"><td style="width: 120px;">2137 KM</td><td style="width: 10px;">|</td><td style="width: 120px;">12 KM</td></tr>
-            </table>
-            <div class="sliderspeed">
-                <span class="sliderspeedfill" id="fill"></span>
-                <input class="sliderspeedinput" type="range" min="0" max="100" value="25" id="slider" oninput="updatefill(this.value)">
-            </div>
-            <table style="width: 250px;">
-                <tr style="text-align: center;"><td style="width: 120px; font-size: 12px;">MAX SPEED: 90 KM/H</td><td style="width: 10px;">|</td><td style="width: 120px; font-size: 12px;" id="setmaxspeed">SET MAX: -- KM/H</td></tr>
-            </table>
-        </div>
-        <div class="item item6">
-            <span onclick="openNav()">menu</span>
-            <br><br>
-            <span onclick="connectBLE()" id="bleStatus" style="cursor:pointer;">Connect BLE</span>
-            
-            
-        </div>
-        <div class="item item7"></div>
     </div>
-    <input type="range" id="slider" min="0" max="100" value="0" oninput="updateSPEED(this.value)" hidden> </br>
-    <input type="range" id="slider" min="0" max="200" step="0.01" value="0" oninput="updateCURRENT(this.value)" hidden>
-    <input type="range" id="slider" min="0" max="100" value="0" oninput="updateBATPRO(this.value)" hidden>
-    <input type="range" id="slider" min="0" max="150" value="0" oninput="updateTEMPBAT1(this.value)" hidden>
-    <input type="range" id="slider" min="0" max="150" value="0" oninput="updateTEMPBAT2(this.value)" hidden>
-    <input type="range" id="slider" min="0" max="150" value="0" oninput="updateTEMPBAT3(this.value)" hidden>
+
+    <!-- MAIN DASHBOARD -->
+    <div class="dashboard">
+        <!-- Header (mobile only) -->
+        <div class="header">
+            <div class="header-left">
+                <div class="dot" id="bleDot"></div>
+                <span class="ble-status" id="bleStatus" onclick="connectBLE()">Connect</span>
+            </div>
+            <span class="menu-btn" onclick="openNav()">☰</span>
+        </div>
+
+        <!-- Speed Gauge -->
+        <div class="speed-section">
+            <div class="speed-gauge">
+                <svg viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="#222" stroke="#333" stroke-width="0.5"/>
+                    <!-- Ozdoby - ticki na zewnątrz -->
+                    <rect x="69.5" y="5" width="1" height="7" fill="#444"/>
+                    <rect x="69.5" y="128" width="1" height="7" fill="#444"/>
+                    <rect x="5" y="69.5" width="7" height="1" fill="#444"/>
+                    <rect x="128" y="69.5" width="7" height="1" fill="#444"/>
+                    <!-- Koła progress -->
+                    <circle cx="70" cy="70" r="50" fill="#222" stroke="#333" stroke-width="5"/>
+                    <circle class="SPEED-circle" cx="70" cy="70" r="50" fill="none" stroke="#4caf50" stroke-width="5"
+                            stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(45, 70, 70)"/>
+                    <!-- Ozdoby szare - przerywniki -->
+                    <rect x="67.5" y="16" width="5" height="8" fill="#222"/>
+                    <rect x="67.5" y="116" width="5" height="8" fill="#222"/>
+                    <rect x="116" y="67.5" width="8" height="5" fill="#222"/>
+                    <rect x="16" y="67.5" width="8" height="5" fill="#222"/>
+                    <rect x="16" y="67.5" width="8" height="5" fill="#222" transform="rotate(45 70 70)"/>
+                    <rect x="16" y="67.5" width="8" height="5" fill="#222" transform="rotate(135 70 70)"/>
+                    <rect x="16" y="67.5" width="8" height="5" fill="#222" transform="rotate(225 70 70)"/>
+                    <rect x="16" y="67.5" width="8" height="5" fill="#222" transform="rotate(315 70 70)"/>
+                    <!-- Text -->
+                    <text x="70" y="40" class="progress-text" font-size="7" fill="#666">SPEED</text>
+                    <text x="54" y="62" class="progress-text" id="progressSPEED" font-size="23" fill="#4caf50">0</text>
+                    <text x="85" y="64" class="progress-text" font-size="12" fill="#888">km/h</text>
+                    <text x="70" y="80" class="progress-text" font-size="7" fill="#666">CURRENT</text>
+                    <rect x="47" y="85" width="45" height="0.3" fill="#333"/>
+                    <text x="70" y="97" class="progress-text" id="progressCURRENT" font-size="13" fill="#fff">0.00 A</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Battery Gauge -->
+        <div class="battery-section">
+            <div class="battery-gauge">
+                <svg viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="#222" stroke="#333" stroke-width="0.5"/>
+                    <!-- Koła progress -->
+                    <circle cx="70" cy="70" r="45" fill="#222" stroke="#333" stroke-width="10"/>
+                    <circle class="BATT-circle" cx="70" cy="70" r="45" fill="none" stroke="#4caf50" stroke-width="10"
+                            stroke-dasharray="282.74" stroke-dashoffset="282.74" transform="rotate(45, 70, 70)"/>
+                    <!-- Ozdoby szare - przerywniki -->
+                    <rect x="64.5" y="19" width="10" height="12" fill="#222"/>
+                    <rect x="64.5" y="109" width="10" height="12" fill="#222"/>
+                    <rect x="109" y="64.5" width="12" height="10" fill="#222"/>
+                    <rect x="19" y="64.5" width="12" height="10" fill="#222"/>
+                    <rect x="19" y="64.5" width="12" height="10" fill="#222" transform="rotate(225 70 70)"/>
+                    <!-- Text -->
+                    <text x="70" y="50" class="progress-text" font-size="8" fill="#666">BATTERY</text>
+                    <rect x="45" y="55" width="50" height="0.3" fill="#333"/>
+                    <text x="70" y="72" class="progress-text" id="progressBAT" font-size="12" fill="#fff">0.0v</text>
+                    <text x="70" y="90" class="progress-text" id="progressBATPRO" font-size="14" fill="#4caf50">0%</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Temperatures -->
+        <div class="temps-section">
+            <div class="temp-item">
+                <div class="temp-label">Engine</div>
+                <div class="temp-line"></div>
+                <div class="temp-value" id="tempENGINE">--°c</div>
+            </div>
+            <div class="temp-item">
+                <div class="temp-label">Controller</div>
+                <div class="temp-line"></div>
+                <div class="temp-value" id="tempCONTROLLER">--°c</div>
+            </div>
+            <div class="temp-item">
+                <div class="temp-label">Outdoor</div>
+                <div class="temp-line"></div>
+                <div class="temp-value" id="tempOUTDOR">--°c</div>
+            </div>
+            <!-- Battery temps on mobile -->
+            <div class="battemps-mobile">
+                <div>
+                    <div class="battemp-container"><div id="battempprogres1" class="battemp-bar"></div></div>
+                    <div class="battemp-value" id="battemp1">--°c</div>
+                </div>
+                <div>
+                    <div class="battemp-container"><div id="battempprogres2" class="battemp-bar"></div></div>
+                    <div class="battemp-value" id="battemp2">--°c</div>
+                </div>
+                <div>
+                    <div class="battemp-container"><div id="battempprogres3" class="battemp-bar"></div></div>
+                    <div class="battemp-value" id="battemp3">--°c</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Battery temps desktop -->
+        <div class="battemps-section">
+            <div>
+                <div class="battemp-container"><div id="battempprogres1d" class="battemp-bar"></div></div>
+                <div class="battemp-value" id="battemp1d">--°c</div>
+            </div>
+            <div>
+                <div class="battemp-container"><div id="battempprogres2d" class="battemp-bar"></div></div>
+                <div class="battemp-value" id="battemp2d">--°c</div>
+            </div>
+            <div>
+                <div class="battemp-container"><div id="battempprogres3d" class="battemp-bar"></div></div>
+                <div class="battemp-value" id="battemp3d">--°c</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-section">
+            <div class="distance-display">
+                <div class="distance-item">
+                    <div class="distance-label">TOTAL</div>
+                    <div class="distance-value" id="totalDistance">0 km</div>
+                </div>
+                <div style="color:#333">|</div>
+                <div class="distance-item">
+                    <div class="distance-label">TRIP</div>
+                    <div class="distance-value" id="tripDistance">0 km</div>
+                </div>
+            </div>
+            <div class="slider-container">
+                <div class="slider-track">
+                    <div class="slider-fill" id="sliderFill"></div>
+                </div>
+                <input type="range" class="slider-input" id="maxSpeedSlider" min="0" max="100" value="0" oninput="updateMaxSpeed(this.value)">
+                <div class="slider-labels">
+                    <span>OFF</span>
+                    <span id="maxSpeedValue">MAX: OFF</span>
+                    <span>100</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GEAR CONTROL -->
+    <div class="gear-display">
+        <button class="gear-btn" onclick="gearDown()">−</button>
+        <span class="gear-number" id="gearNumber">1</span>
+        <button class="gear-btn" onclick="gearUp()">+</button>
+    </div>
+
+    <!-- PANIC BUTTON -->
+    <button class="panic-btn" id="panicBtn" onclick="togglePanic()">PANIC</button>
+
+    <!-- SIDE MENU -->
     <div id="mySidenav" class="sidenav">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a href="#" id="mahperkm">mAh/km: --</a>
-        <a href="#">About</a>
-        <a href="#">Services</a>
-        <a href="#">Clients</a>
-        <a href="#">Contact</a>
-      </div>
-      
-    
-    <!-- Suwak -->
+        <span class="closebtn" onclick="closeNav()">×</span>
+        <div class="sidenav-content">
+            <!-- Connection -->
+            <div class="settings-section">
+                <div class="settings-title">Connection</div>
+                <div class="settings-item">
+                    <span class="settings-label">Bluetooth</span>
+                    <span class="settings-value" id="bleStatusMenu" onclick="connectBLE()" style="cursor:pointer">Connect</span>
+                </div>
+            </div>
+
+            <!-- Wheel Settings -->
+            <div class="settings-section">
+                <div class="settings-title">Wheel</div>
+                <div class="settings-item">
+                    <span class="settings-label">Circumference (mm)</span>
+                    <input type="number" class="settings-input" id="wheelCircum" value="2200" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Pulses/rev</span>
+                    <input type="number" class="settings-input" id="wheelPulses" value="1" onchange="saveSettings()">
+                </div>
+            </div>
+
+            <!-- Gears -->
+            <div class="settings-section">
+                <div class="settings-title">Gears (MXUS 3K)</div>
+                <div class="settings-item">
+                    <span class="settings-label">Number of gears</span>
+                    <input type="number" class="settings-input" id="gearCount" min="1" max="8" value="8" onchange="updateGearInputs()">
+                </div>
+                <div id="gearPositions"></div>
+                <div class="settings-item">
+                    <button class="settings-btn" onclick="calibrateGear()">Calibrate Current</button>
+                </div>
+                <div class="settings-item">
+                    <button class="settings-btn" onclick="finetuneGear()">Fine-tune Mode</button>
+                </div>
+            </div>
+
+            <!-- Trailer -->
+            <div class="settings-section">
+                <div class="settings-title">Trailer</div>
+                <div class="settings-item">
+                    <span class="settings-label">Trailer braking</span>
+                    <div class="toggle" id="trailerToggle" onclick="toggleTrailer()"></div>
+                </div>
+            </div>
+
+            <!-- Limits -->
+            <div class="settings-section">
+                <div class="settings-title">Limits</div>
+                <div class="settings-item">
+                    <span class="settings-label">Max speed (km/h)</span>
+                    <input type="number" class="settings-input" id="limitSpeed" value="90" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Max current (A)</span>
+                    <input type="number" class="settings-input" id="limitCurrent" value="50" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Max temp (°C)</span>
+                    <input type="number" class="settings-input" id="limitTemp" value="80" onchange="saveSettings()">
+                </div>
+            </div>
+
+            <!-- Alarms -->
+            <div class="settings-section">
+                <div class="settings-title">Alarms</div>
+                <div class="settings-item">
+                    <span class="settings-label">Temp alarm</span>
+                    <div class="toggle active" id="alarmTempToggle" onclick="toggleAlarmTemp()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Low battery alarm</span>
+                    <div class="toggle active" id="alarmBatToggle" onclick="toggleAlarmBat()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Vibration</span>
+                    <div class="toggle active" id="alarmVibToggle" onclick="toggleAlarmVib()"></div>
+                </div>
+            </div>
+
+            <!-- Security -->
+            <div class="settings-section">
+                <div class="settings-title">Security</div>
+                <div class="settings-item">
+                    <span class="settings-label">PIN Lock</span>
+                    <div class="toggle" id="lockToggle" onclick="toggleLock()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Change PIN</span>
+                    <button class="settings-btn" onclick="changePin()">Set PIN</button>
+                </div>
+            </div>
+
+            <!-- Trip -->
+            <div class="settings-section">
+                <div class="settings-title">Trip</div>
+                <div class="settings-item">
+                    <span class="settings-label">Reset trip</span>
+                    <button class="settings-btn danger" onclick="resetTrip()">Reset</button>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="settings-section">
+                <div class="settings-title">Info</div>
+                <div class="settings-item">
+                    <span class="settings-label">mAh/km</span>
+                    <span class="settings-value" id="mahPerKm">--</span>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Avg speed</span>
+                    <span class="settings-value" id="avgSpeed">-- km/h</span>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Max speed</span>
+                    <span class="settings-value" id="maxSpeedReached">-- km/h</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        //progressSPEED - predkosc
-        //progressBAT - bateria
-        //progressBATPRO - bateria procent
-        //progressBATvoltage - napiecie baterii
-        //progressCURRENT - ilosc amper
-        //tempENGINE - temp silnika
-        //tempCONTROLLER - temp kontrolera
-        //tempOUTDOR - temp na zewn.
-        //tempBAT1 - temp baterii
-        //tempBAT2 - temp baterii
-        //tempBAT3 - temp baterii
-        //-------------------------KOLO SPEED --------------------------------
-        const circle = document.querySelector(".SPEED-circle");
-        const progressSPEED = document.getElementById("progressSPEED");
-        const circleLength = 2 * Math.PI * 50; // Obwód koła (2πr)
+        // ==================== STATE ====================
+        let settings = {
+            wheelCircum: 2200,
+            wheelPulses: 1,
+            gearCount: 8,
+            gearPositions: [100, 200, 300, 400, 500, 600, 700, 800],
+            trailerBraking: false,
+            limitSpeed: 90,
+            limitCurrent: 50,
+            limitTemp: 80,
+            alarmTemp: true,
+            alarmBat: true,
+            alarmVib: true,
+            lockEnabled: false,
+            pin: '1234',
+            totalDistance: 0,
+            tripDistance: 0
+        };
+
+        let currentGear = 1;
+        let panicMode = false;
+        let isLocked = false;
+
+        // ==================== INIT ====================
+        function init() {
+            loadSettings();
+            updateGearInputs();
+            updateUI();
+
+            if (settings.lockEnabled) {
+                showLockScreen();
+            }
+        }
+
+        // ==================== SETTINGS ====================
+        function loadSettings() {
+            const saved = localStorage.getItem('ebikeSettings');
+            if (saved) {
+                settings = {...settings, ...JSON.parse(saved)};
+            }
+            applySettingsToUI();
+        }
+
+        function saveSettings() {
+            settings.wheelCircum = parseInt(document.getElementById('wheelCircum').value) || 2200;
+            settings.wheelPulses = parseInt(document.getElementById('wheelPulses').value) || 1;
+            settings.limitSpeed = parseInt(document.getElementById('limitSpeed').value) || 90;
+            settings.limitCurrent = parseInt(document.getElementById('limitCurrent').value) || 50;
+            settings.limitTemp = parseInt(document.getElementById('limitTemp').value) || 80;
+
+            localStorage.setItem('ebikeSettings', JSON.stringify(settings));
+        }
+
+        function applySettingsToUI() {
+            document.getElementById('wheelCircum').value = settings.wheelCircum;
+            document.getElementById('wheelPulses').value = settings.wheelPulses;
+            document.getElementById('gearCount').value = settings.gearCount;
+            document.getElementById('limitSpeed').value = settings.limitSpeed;
+            document.getElementById('limitCurrent').value = settings.limitCurrent;
+            document.getElementById('limitTemp').value = settings.limitTemp;
+
+            document.getElementById('trailerToggle').classList.toggle('active', settings.trailerBraking);
+            document.getElementById('alarmTempToggle').classList.toggle('active', settings.alarmTemp);
+            document.getElementById('alarmBatToggle').classList.toggle('active', settings.alarmBat);
+            document.getElementById('alarmVibToggle').classList.toggle('active', settings.alarmVib);
+            document.getElementById('lockToggle').classList.toggle('active', settings.lockEnabled);
+
+            document.getElementById('totalDistance').textContent = settings.totalDistance + ' km';
+            document.getElementById('tripDistance').textContent = settings.tripDistance.toFixed(1) + ' km';
+        }
+
+        // ==================== GEARS ====================
+        function updateGearInputs() {
+            const count = parseInt(document.getElementById('gearCount').value) || 8;
+            settings.gearCount = Math.min(8, Math.max(1, count));
+
+            const container = document.getElementById('gearPositions');
+            container.innerHTML = '';
+
+            for (let i = 0; i < settings.gearCount; i++) {
+                const div = document.createElement('div');
+                div.className = 'settings-item';
+                div.innerHTML = `
+                    <span class="settings-label">Gear ${i + 1} pos</span>
+                    <input type="number" class="settings-input" id="gearPos${i}"
+                           value="${settings.gearPositions[i] || (i + 1) * 100}"
+                           onchange="updateGearPosition(${i})">
+                `;
+                container.appendChild(div);
+            }
+            saveSettings();
+        }
+
+        function updateGearPosition(index) {
+            settings.gearPositions[index] = parseInt(document.getElementById(`gearPos${index}`).value) || 0;
+            saveSettings();
+        }
+
+        function gearUp() {
+            if (currentGear < settings.gearCount) {
+                currentGear++;
+                document.getElementById('gearNumber').textContent = currentGear;
+                sendGearChange(currentGear);
+            }
+        }
+
+        function gearDown() {
+            if (currentGear > 1) {
+                currentGear--;
+                document.getElementById('gearNumber').textContent = currentGear;
+                sendGearChange(currentGear);
+            }
+        }
+
+        function calibrateGear() {
+            alert('Move gear to desired position, then click OK');
+            // TODO: Read encoder value and save for current gear
+        }
+
+        function finetuneGear() {
+            alert('Fine-tune mode: use +/- buttons to adjust');
+            // TODO: Implement finetune mode
+        }
+
+        // ==================== TOGGLES ====================
+        function toggleTrailer() {
+            settings.trailerBraking = !settings.trailerBraking;
+            document.getElementById('trailerToggle').classList.toggle('active', settings.trailerBraking);
+            saveSettings();
+        }
+
+        function toggleAlarmTemp() {
+            settings.alarmTemp = !settings.alarmTemp;
+            document.getElementById('alarmTempToggle').classList.toggle('active', settings.alarmTemp);
+            saveSettings();
+        }
+
+        function toggleAlarmBat() {
+            settings.alarmBat = !settings.alarmBat;
+            document.getElementById('alarmBatToggle').classList.toggle('active', settings.alarmBat);
+            saveSettings();
+        }
+
+        function toggleAlarmVib() {
+            settings.alarmVib = !settings.alarmVib;
+            document.getElementById('alarmVibToggle').classList.toggle('active', settings.alarmVib);
+            saveSettings();
+        }
+
+        function toggleLock() {
+            settings.lockEnabled = !settings.lockEnabled;
+            document.getElementById('lockToggle').classList.toggle('active', settings.lockEnabled);
+            saveSettings();
+        }
+
+        // ==================== PANIC MODE ====================
+        function togglePanic() {
+            panicMode = !panicMode;
+            document.getElementById('panicBtn').classList.toggle('active', panicMode);
+
+            if (panicMode) {
+                // Send 20 km/h limit to nRF52
+                sendMaxSpeed(20);
+                if (settings.alarmVib && navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            } else {
+                // Only phone can disable - already on phone so OK
+                sendMaxSpeed(0); // Remove limit
+            }
+        }
+
+        // ==================== LOCK SCREEN ====================
+        let enteredPin = '';
+
+        function showLockScreen() {
+            isLocked = true;
+            document.getElementById('lockScreen').classList.add('active');
+            enteredPin = '';
+            updatePinDisplay();
+        }
+
+        function hideLockScreen() {
+            isLocked = false;
+            document.getElementById('lockScreen').classList.remove('active');
+        }
+
+        function enterPin(num) {
+            if (enteredPin.length < 4) {
+                enteredPin += num;
+                updatePinDisplay();
+            }
+        }
+
+        function clearPin() {
+            enteredPin = '';
+            updatePinDisplay();
+        }
+
+        function submitPin() {
+            if (enteredPin === settings.pin) {
+                hideLockScreen();
+                if (settings.alarmVib && navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            } else {
+                enteredPin = '';
+                updatePinDisplay();
+                if (settings.alarmVib && navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100, 50, 100]);
+                }
+            }
+        }
+
+        function updatePinDisplay() {
+            document.getElementById('pinDisplay').textContent = '●'.repeat(enteredPin.length);
+        }
+
+        function changePin() {
+            const newPin = prompt('Enter new 4-digit PIN:');
+            if (newPin && newPin.length === 4 && /^\d+$/.test(newPin)) {
+                settings.pin = newPin;
+                saveSettings();
+                alert('PIN changed!');
+            } else {
+                alert('PIN must be 4 digits');
+            }
+        }
+
+        // ==================== TRIP ====================
+        function resetTrip() {
+            if (confirm('Reset trip distance?')) {
+                settings.tripDistance = 0;
+                document.getElementById('tripDistance').textContent = '0 km';
+                saveSettings();
+            }
+        }
+
+        // ==================== MAX SPEED SLIDER ====================
+        function updateMaxSpeed(value) {
+            const fill = document.getElementById('sliderFill');
+            const label = document.getElementById('maxSpeedValue');
+
+            fill.style.width = value + '%';
+
+            if (value < 5 || value > 95) {
+                label.textContent = 'MAX: OFF';
+            } else {
+                label.textContent = 'MAX: ' + value + ' km/h';
+            }
+
+            if (ebikeService && !panicMode) {
+                sendMaxSpeed(parseInt(value));
+            }
+        }
+
+        // ==================== NAVIGATION ====================
+        function openNav() {
+            document.getElementById('mySidenav').style.width = '300px';
+            document.getElementById('mySidenav').classList.add('open');
+        }
+
+        function closeNav() {
+            document.getElementById('mySidenav').style.width = '0';
+            document.getElementById('mySidenav').classList.remove('open');
+        }
+
+        // ==================== UI UPDATES ====================
+        const circleSpeed = document.querySelector('.SPEED-circle');
+        const circleBatt = document.querySelector('.BATT-circle');
+        const circleSpeedLength = 2 * Math.PI * 50;
+        const circleBattLength = 2 * Math.PI * 45;
+
+        function updateUI() {
+            // Update distances
+            document.getElementById('totalDistance').textContent = settings.totalDistance + ' km';
+            document.getElementById('tripDistance').textContent = settings.tripDistance.toFixed(1) + ' km';
+        }
 
         function updateSPEED(value) {
-            let offset = -circleLength * (1 - value / 100);
-            circle.style.strokeDashoffset = offset;
-            progressSPEED.textContent = value + "";
+            // Rotacja zaczyna się od 45 stopni, więc offset idzie w drugą stronę
+            let offset = -circleSpeedLength * (1 - value / 100);
+            circleSpeed.style.strokeDashoffset = offset;
+            document.getElementById('progressSPEED').textContent = value;
         }
+
         function updateCURRENT(value) {
-            progressCURRENT.textContent = value + " A";
-        }
-        //-------------------------KOLO SPEED --------------------------------
-        const circleBAT = document.querySelector(".BATT-circle");
-        const progressBATTPRO = document.getElementById("progressBATPRO");
-        const progressBATT = document.getElementById("progressBAT");
-        const circleBATLength = 2 * Math.PI * 45; // Obwód koła (2πr)
-        
-        function updateBATPRO(value) {
-            if (value < 20){
-                circleBAT.setAttribute("stroke", "red");
-            }
-            else if (value < 40){
-                circleBAT.setAttribute("stroke", "orange");
-            } else{
-                circleBAT.setAttribute("stroke", "#4caf50");
-            }
-            let offset = -circleBATLength * (1 - value / 100);
-            circleBAT.style.strokeDashoffset = offset;
-            progressBATTPRO.textContent = value + "%";
-            progressBATT.textContent = value + "v";
-        }
-        //-------------------------BATTEMP --------------------------------
-        const battemp1 = document.getElementById("battemp1");
-        const battemp2 = document.getElementById("battemp2");
-        const battemp3 = document.getElementById("battemp3");
-        const battempprogres1 = document.getElementById("battempprogres1");
-        const battempprogres2 = document.getElementById("battempprogres2");
-        const battempprogres3 = document.getElementById("battempprogres3");
-        function updateTEMPBAT1(value) {
-            battempprogres1.style.height = value*1.5 + "%";
-            battemp1.textContent = value;
-            if(value > 49) {battempprogres1.style.backgroundColor = "red";}
-            else if (value > 39){battempprogres1.style.backgroundColor = "orange";}
-            else {battempprogres1.style.backgroundColor = "white";}
-        }
-        function updateTEMPBAT2(value) {
-            battempprogres2.style.height = value*1.5 + "%";
-            battemp2.textContent = value;
-            if(value > 50) {battempprogres2.style.backgroundColor = "red";}
-            else if (value > 40){battempprogres2.style.backgroundColor = "orange";}
-            else {battempprogres2.style.backgroundColor = "white";}
-        }
-        function updateTEMPBAT3(value) {
-            battempprogres3.style.height = value*1.5 + "%";
-            battemp3.textContent = value;
-            if(value > 50) {battempprogres3.style.backgroundColor = "red";}
-            else if (value > 40){battempprogres3.style.backgroundColor = "orange";}
-            else {battempprogres3.style.backgroundColor = "white";}
+            document.getElementById('progressCURRENT').textContent = value + ' A';
         }
 
-        //-------------------------SliderSpeed --------------------------------
-        let slider = document.getElementById("slider");
-        let fill = document.getElementById("fill");
-        let setmaxspeed = document.getElementById("setmaxspeed");
-        function updatefill(value){
-            fill.style.width = value + "%";
-            if(value > 99){
-                setmaxspeed.textContent = "SET MAX: OFF"
-            } else if(value < 2) {
-                setmaxspeed.textContent = "SET MAX: OFF"
-            } else{
-                setmaxspeed.textContent = "SET MAX: " + value + " KM/H"
+        function updateBATPRO(percent) {
+            // Rotacja zaczyna się od 45 stopni
+            let offset = -circleBattLength * (1 - percent / 100);
+            circleBatt.style.strokeDashoffset = offset;
+            document.getElementById('progressBATPRO').textContent = percent + '%';
+
+            // Color based on level
+            let color = '#4caf50';
+            if (percent < 20) color = '#ff4444';
+            else if (percent < 40) color = '#ff8800';
+            circleBatt.style.stroke = color;
+            document.getElementById('progressBATPRO').style.fill = color;
+
+            // Alarm
+            if (percent < 15 && settings.alarmBat) {
+                triggerAlarm('Low battery!');
             }
         }
-        //-------------------------Slidernav --------------------------------
-        function openNav() {
-            document.getElementById("mySidenav").style.width = "250px";
-        }
-        const mahperkm = document.getElementById("mahperkm");
-        function updatemahperkm(value) {
-            mahperkm.textContent = "mAh/km: " + value;
-        }
-        /* Set the width of the side navigation to 0 */
-        function closeNav() {
-            document.getElementById("mySidenav").style.width = "0";
-        }
-        setInterval(function() {
-            location.reload(); // Odświeżenie strony
-        }, 2000000); // 1000 ms = 1 sekunda
 
-        //-------------------------WEB BLUETOOTH --------------------------------
+        function updateTEMPBAT(index, value) {
+            const progM = document.getElementById('battempprogres' + index);
+            const progD = document.getElementById('battempprogres' + index + 'd');
+            const valM = document.getElementById('battemp' + index);
+            const valD = document.getElementById('battemp' + index + 'd');
+
+            const height = Math.min(value * 1.5, 100) + '%';
+            let color = 'white';
+            if (value > 50) color = '#ff4444';
+            else if (value > 40) color = '#ff8800';
+
+            if (progM) {
+                progM.style.height = height;
+                progM.style.backgroundColor = color;
+            }
+            if (progD) {
+                progD.style.height = height;
+                progD.style.backgroundColor = color;
+            }
+            if (valM) valM.textContent = value + '°c';
+            if (valD) valD.textContent = value + '°c';
+        }
+
+        function triggerAlarm(message) {
+            if (settings.alarmVib && navigator.vibrate) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+            console.log('ALARM:', message);
+        }
+
+        // ==================== WEB BLUETOOTH ====================
         const EBIKE_SERVICE_UUID = '12345678-1234-5678-1234-56789abcdef0';
         const SPEED_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef1';
         const CURRENT_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef2';
@@ -406,7 +1310,7 @@
 
         async function connectBLE() {
             try {
-                document.getElementById('bleStatus').textContent = 'Connecting...';
+                updateBLEStatus('connecting');
 
                 bleDevice = await navigator.bluetooth.requestDevice({
                     filters: [{ name: 'Ebike' }],
@@ -418,18 +1322,16 @@
                 bleServer = await bleDevice.gatt.connect();
                 ebikeService = await bleServer.getPrimaryService(EBIKE_SERVICE_UUID);
 
-                // Subscribe to notifications
                 await subscribeToCharacteristic(SPEED_CHAR_UUID, handleSpeed);
                 await subscribeToCharacteristic(CURRENT_CHAR_UUID, handleCurrent);
                 await subscribeToCharacteristic(BATTERY_CHAR_UUID, handleBattery);
                 await subscribeToCharacteristic(TEMPS_CHAR_UUID, handleTemps);
 
-                document.getElementById('bleStatus').textContent = 'Connected!';
-                document.getElementById('bleStatus').style.color = '#4caf50';
+                updateBLEStatus('connected');
 
             } catch (error) {
                 console.error('BLE Error:', error);
-                document.getElementById('bleStatus').textContent = 'Connect BLE';
+                updateBLEStatus('disconnected');
             }
         }
 
@@ -440,25 +1342,55 @@
         }
 
         function onDisconnected() {
-            document.getElementById('bleStatus').textContent = 'Disconnected - Click to reconnect';
-            document.getElementById('bleStatus').style.color = 'red';
+            updateBLEStatus('disconnected');
+            ebikeService = null;
+        }
+
+        function updateBLEStatus(status) {
+            const dot = document.getElementById('bleDot');
+            const text = document.getElementById('bleStatus');
+            const menuText = document.getElementById('bleStatusMenu');
+
+            if (status === 'connected') {
+                dot.classList.remove('disconnected');
+                text.textContent = 'Connected';
+                text.classList.add('connected');
+                if (menuText) menuText.textContent = 'Connected';
+            } else if (status === 'connecting') {
+                text.textContent = 'Connecting...';
+                if (menuText) menuText.textContent = 'Connecting...';
+            } else {
+                dot.classList.add('disconnected');
+                text.textContent = 'Connect';
+                text.classList.remove('connected');
+                if (menuText) menuText.textContent = 'Disconnected';
+            }
         }
 
         function handleSpeed(event) {
             const value = event.target.value.getUint8(0);
             updateSPEED(value);
+
+            // Check alarm
+            if (value > settings.limitSpeed && settings.alarmTemp) {
+                triggerAlarm('Speed limit exceeded!');
+            }
         }
 
         function handleCurrent(event) {
             const value = event.target.value.getUint16(0, true) / 100;
             updateCURRENT(value.toFixed(2));
+
+            if (value > settings.limitCurrent && settings.alarmTemp) {
+                triggerAlarm('Current limit exceeded!');
+            }
         }
 
         function handleBattery(event) {
             const voltage = event.target.value.getUint16(0, true) / 100;
             const percent = event.target.value.getUint8(2);
             updateBATPRO(percent);
-            progressBATT.textContent = voltage.toFixed(1) + "v";
+            document.getElementById('progressBAT').textContent = voltage.toFixed(1) + 'v';
         }
 
         function handleTemps(event) {
@@ -470,35 +1402,38 @@
             const tempBat2 = data.getInt8(4);
             const tempBat3 = data.getInt8(5);
 
-            document.getElementById('tempENGINE').innerHTML = tempEngine + '&deg;c';
-            document.getElementById('tempCONTROLLER').innerHTML = tempController + '&deg;c';
-            document.getElementById('tempOUTDOR').innerHTML = tempOutdoor + '&deg;c';
-            updateTEMPBAT1(tempBat1);
-            updateTEMPBAT2(tempBat2);
-            updateTEMPBAT3(tempBat3);
+            document.getElementById('tempENGINE').textContent = tempEngine + '°c';
+            document.getElementById('tempCONTROLLER').textContent = tempController + '°c';
+            document.getElementById('tempOUTDOR').textContent = tempOutdoor + '°c';
+
+            updateTEMPBAT(1, tempBat1);
+            updateTEMPBAT(2, tempBat2);
+            updateTEMPBAT(3, tempBat3);
+
+            // Check temp alarms
+            const maxTemp = Math.max(tempEngine, tempController, tempBat1, tempBat2, tempBat3);
+            if (maxTemp > settings.limitTemp && settings.alarmTemp) {
+                triggerAlarm('Temperature limit exceeded!');
+            }
         }
 
-        // Send max speed to nRF52
         async function sendMaxSpeed(value) {
             if (!ebikeService) return;
             try {
                 const characteristic = await ebikeService.getCharacteristic(MAXSPEED_CHAR_UUID);
                 await characteristic.writeValue(new Uint8Array([value]));
-                console.log('Max speed sent:', value);
             } catch (error) {
                 console.error('Error sending max speed:', error);
             }
         }
 
-        // Update slider to send max speed
-        const originalUpdateFill = updatefill;
-        updatefill = function(value) {
-            originalUpdateFill(value);
-            if (ebikeService) {
-                sendMaxSpeed(parseInt(value));
-            }
-        };
-    </script>
+        async function sendGearChange(gear) {
+            // TODO: Send gear to nRF52
+            console.log('Gear changed to:', gear);
+        }
 
+        // ==================== START ====================
+        init();
+    </script>
 </body>
 </html>
