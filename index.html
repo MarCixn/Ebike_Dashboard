@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ebike">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
     <title>Ebike Dashboard</title>
     <style>
         @font-face {
@@ -20,37 +26,64 @@
             font-family: 'nothing', sans-serif;
             color: #FFFFFF;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
             min-height: 100vh;
+            min-height: 100dvh;
+            overflow-y: auto;
             overflow-x: hidden;
+        }
+
+        /* Spacer to allow hiding address bar on mobile */
+        body::after {
+            content: '';
+            display: block;
+            height: 1px;
+            margin-top: 50px;
         }
 
         /* ==================== MAIN LAYOUT ==================== */
         .dashboard {
             display: grid;
-            gap: 15px;
+            gap: 5px;
             max-width: 1400px;
             margin: 0 auto;
-            /* Mobile: single column */
-            grid-template-columns: 1fr;
+            height: calc(100vh - 10px);
+            height: calc(100dvh - 10px);
+            position: sticky;
+            top: 0;
+            /* Mobile portrait: compact layout */
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr auto auto;
             grid-template-areas:
-                "header"
-                "speed"
-                "battery"
-                "temps"
-                "controls"
-                "stats";
+                "header header"
+                "speed battery"
+                "temps temps"
+                "controls controls";
         }
 
         /* Tablet/Desktop landscape */
         @media (min-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr 2fr 1.5fr;
-                grid-template-rows: auto auto auto;
+                grid-template-rows: 1fr 1fr auto;
                 grid-template-areas:
                     "temps speed battery"
                     "temps speed battemps"
                     "controls controls stats";
+            }
+        }
+
+        /* Mobile landscape (orientation-based for all phone sizes) */
+        @media (orientation: landscape) and (max-height: 550px) {
+            .dashboard {
+                grid-template-columns: 0.8fr 2.2fr 1fr;
+                grid-template-rows: 1fr 0.5fr auto;
+                grid-template-areas:
+                    "temps speed battery"
+                    "temps speed battemps"
+                    "controls controls controls";
+                padding: 5px;
+                gap: 2px;
             }
         }
 
@@ -60,11 +93,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 10px;
+            padding: 3px 10px;
             border-bottom: 1px solid #333;
+            min-height: 30px;
         }
 
         @media (min-width: 768px) {
+            .header {
+                display: none;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
             .header {
                 display: none;
             }
@@ -121,14 +161,22 @@
 
         .speed-gauge {
             position: relative;
-            width: min(280px, 80vw);
-            height: min(280px, 80vw);
+            width: min(200px, 45vw);
+            height: min(200px, 45vw);
         }
 
         @media (min-width: 768px) {
             .speed-gauge {
                 width: 280px;
                 height: 280px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .speed-gauge {
+                width: min(380px, 75vh) !important;
+                height: min(380px, 75vh) !important;
+                transform: translateX(-70px);
             }
         }
 
@@ -156,15 +204,34 @@
             padding: 10px;
         }
 
+        /* Landscape phones and tablets - battery positioning */
+        @media (orientation: landscape) and (max-height: 550px) {
+            .battery-section {
+                justify-content: flex-start !important;
+                align-items: center !important;
+                padding: 0 !important;
+            }
+            .battery-gauge {
+                transform: translate(-100px, 40px) !important;
+            }
+        }
+
         .battery-gauge {
-            width: min(150px, 40vw);
-            height: min(150px, 40vw);
+            width: min(130px, 35vw);
+            height: min(130px, 35vw);
         }
 
         @media (min-width: 768px) {
             .battery-gauge {
                 width: 160px;
                 height: 160px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .battery-gauge {
+                width: min(160px, 30vh) !important;
+                height: min(160px, 30vh) !important;
             }
         }
 
@@ -184,16 +251,27 @@
             flex-direction: row;
             justify-content: space-around;
             align-items: center;
-            padding: 10px;
-            gap: 10px;
+            padding: 5px;
+            gap: 5px;
         }
 
         @media (min-width: 768px) {
             .temps-section {
                 flex-direction: column;
                 justify-content: center;
-                gap: 20px;
+                gap: 15px;
+                padding: 10px;
             }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .temps-section {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .temp-label { font-size: 12px; }
+            .temp-value { font-size: 24px; }
+            .temp-line { width: 70px; }
         }
 
         .temp-item {
@@ -201,21 +279,21 @@
         }
 
         .temp-label {
-            font-size: 10px;
+            font-size: 8px;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .temp-line {
-            width: 60px;
+            width: 40px;
             height: 1px;
             background: linear-gradient(90deg, transparent, #444, transparent);
-            margin: 5px auto;
+            margin: 3px auto;
         }
 
         .temp-value {
-            font-size: 18px;
+            font-size: 14px;
         }
 
         @media (min-width: 768px) {
@@ -228,38 +306,91 @@
         .battemps-section {
             grid-area: battemps;
             display: none;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            padding: 10px;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 5px;
         }
 
         @media (min-width: 768px) {
             .battemps-section {
                 display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                padding: 10px;
             }
         }
 
-        /* Mobile: show in temps section */
+        @media (orientation: landscape) and (max-height: 550px) {
+            .battemps-section {
+                display: flex !important;
+                justify-content: flex-start !important;
+                align-items: flex-start !important;
+                padding: 0 !important;
+                transform: translate(-100px, 70px) !important;
+            }
+            .battemp-container {
+                width: 26px !important;
+                height: 100px !important;
+            }
+            .battemp-label {
+                font-size: 10px !important;
+            }
+            .battemp-value {
+                font-size: 12px !important;
+            }
+        }
+
+        /* Mobile: hide battemps in temps section */
         .battemps-mobile {
-            display: flex;
-            gap: 10px;
-        }
-
-        @media (min-width: 768px) {
-            .battemps-mobile {
-                display: none;
-            }
+            display: none;
         }
 
         .battemp-container {
-            width: 20px;
-            height: 80px;
-            background-color: #2a2a2a;
-            border-radius: 10px;
+            width: 16px;
+            height: 60px;
+            background-color: #222;
+            border-radius: 8px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             border: 1px solid #333;
+        }
+
+        .battemp-container::before {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                #444 0px,
+                #444 2px,
+                transparent 2px,
+                transparent 20%
+            );
+        }
+
+        .battemp-container::after {
+            content: '· · ·';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(90deg);
+            font-size: 8px;
+            color: #333;
+            letter-spacing: 4px;
+            pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            .battemp-container {
+                width: 20px;
+                height: 80px;
+                border-radius: 10px;
+            }
         }
 
         .battemp-bar {
@@ -267,36 +398,98 @@
             background-color: white;
             position: absolute;
             bottom: 0;
-            border-radius: 10px;
+            border-radius: 0 0 6px 6px;
             transition: height 0.3s ease, background-color 0.3s ease;
+            z-index: 2;
+        }
+
+        .battemps-title {
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            margin-right: 8px;
+        }
+
+        .battemp-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .battemp-label {
+            font-size: 8px;
+            color: #555;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .consumption-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: 15px;
+            padding-left: 15px;
+            border-left: 1px solid #333;
+        }
+
+        .consumption-label {
+            font-size: 8px;
+            font-family: 'nothing', sans-serif;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .consumption-value {
+            font-size: 22px;
+            font-family: 'nothing', sans-serif;
+            color: #fff;
+            margin: 5px 0;
+        }
+
+        .consumption-unit {
+            font-size: 9px;
+            font-family: 'nothing', sans-serif;
+            color: #555;
         }
 
         .battemp-value {
-            font-size: 10px;
+            font-size: 8px;
             text-align: center;
-            margin-top: 5px;
+            margin-top: 3px;
             color: #888;
+        }
+
+        @media (min-width: 768px) {
+            .battemp-value {
+                font-size: 10px;
+                margin-top: 5px;
+            }
         }
 
         /* ==================== CONTROLS ==================== */
         .controls-section {
             grid-area: controls;
-            padding: 15px;
+            padding: 5px 10px;
         }
 
         .control-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .distance-display {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            font-size: 14px;
-            margin-bottom: 15px;
+            gap: 15px;
+            font-size: 12px;
+            margin-bottom: 10px;
         }
 
         .distance-item {
@@ -304,33 +497,165 @@
         }
 
         .distance-label {
-            font-size: 10px;
+            font-size: 8px;
             color: #666;
         }
 
         .distance-value {
-            font-size: 16px;
+            font-size: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .controls-section { padding: 15px; }
+            .distance-display { font-size: 14px; margin-bottom: 15px; }
+            .distance-label { font-size: 10px; }
+            .distance-value { font-size: 16px; }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .controls-section {
+                transform: translateX(-85px);
+            }
+        }
+
+        .speed-limit-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .speed-limit-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .speed-limit-btn {
+            width: 50px;
+            height: 50px;
+            background: transparent;
+            border: 2px solid #333;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .speed-limit-btn svg {
+            width: 28px;
+            height: 28px;
+            transition: all 0.2s;
+        }
+
+        .speed-limit-btn .limit-circle {
+            fill: none;
+            stroke: #444;
+            stroke-width: 2;
+        }
+
+        .speed-limit-btn .limit-needle {
+            fill: none;
+            stroke: #444;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .speed-limit-btn .limit-line {
+            stroke: #444;
+            stroke-width: 2;
+            stroke-linecap: round;
+            opacity: 0.3;
+        }
+
+        .speed-limit-btn.active {
+            border-color: #00cc66;
+        }
+
+        .speed-limit-btn.active .limit-circle {
+            stroke: #00cc66;
+        }
+
+        .speed-limit-btn.active .limit-needle {
+            stroke: #00cc66;
+        }
+
+        .speed-limit-btn.active .limit-line {
+            stroke: #00cc66;
+            opacity: 1;
+        }
+
+        .speed-limit-btn:active {
+            transform: scale(0.95);
+        }
+
+        .speed-limit-label {
+            font-size: 8px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .slider-container {
             position: relative;
             width: 100%;
-            max-width: 300px;
-            margin: 0 auto;
+            max-width: 280px;
+        }
+
+        .slider-title {
+            font-size: 8px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .slider-title::before,
+        .slider-title::after {
+            content: '·';
+            margin: 0 5px;
+            color: #333;
         }
 
         .slider-track {
-            height: 4px;
-            background: #2a2a2a;
-            border-radius: 2px;
+            height: 6px;
+            background: #222;
+            border-radius: 3px;
             position: relative;
+            border: 1px solid #333;
+        }
+
+        .slider-ticks {
+            position: absolute;
+            top: -8px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+        }
+
+        .slider-tick {
+            width: 1px;
+            height: 4px;
+            background: #333;
+        }
+
+        .slider-tick:nth-child(5n+1) {
+            height: 6px;
+            background: #444;
         }
 
         .slider-fill {
             position: absolute;
             height: 100%;
-            background: #4caf50;
-            border-radius: 2px;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 3px;
             transition: width 0.1s ease;
         }
 
@@ -339,7 +664,7 @@
             appearance: none;
             background: transparent;
             position: absolute;
-            top: -8px;
+            top: 14px;
             left: 0;
             height: 20px;
             margin: 0;
@@ -353,24 +678,65 @@
             background: #fff;
             border-radius: 50%;
             cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .slider-input:active::-webkit-slider-thumb {
+            transform: scale(1.1);
+        }
+
+        .slider-value-display {
+            font-size: 14px;
+            color: #fff;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .slider-value-display span {
+            color: #4caf50;
         }
 
         .slider-labels {
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
-            font-size: 11px;
-            color: #666;
+            margin-top: 5px;
+            font-size: 8px;
+            color: #333;
+        }
+
+        @media (min-width: 768px) {
+            .slider-container {
+                max-width: 320px;
+            }
+            .slider-value-display {
+                font-size: 16px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .speed-limit-btn {
+                width: 45px;
+                height: 45px;
+            }
+            .slider-container {
+                max-width: 260px;
+            }
         }
 
         /* ==================== STATS ==================== */
         .stats-section {
             grid-area: stats;
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
             gap: 20px;
             padding: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .stats-section {
+                display: flex;
+            }
         }
 
         /* ==================== BLE BUTTON ==================== */
@@ -445,34 +811,56 @@
         /* ==================== GEAR DISPLAY ==================== */
         .gear-display {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 15px;
-            padding: 10px 20px;
+            top: 55%;
+            right: 5px;
+            transform: translateY(-50%);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 5px;
             z-index: 100;
         }
 
         .gear-btn {
-            width: 40px;
-            height: 40px;
-            background: #333;
-            border: 1px solid #555;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 20px;
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 15px;
+            color: #666;
+            font-size: 28px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .gear-btn::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 2px;
+            background: #444;
+        }
+
+        .gear-btn.plus::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: #444;
         }
 
         .gear-btn:active {
+            background: #222;
+            border-color: #4caf50;
+            transform: scale(0.95);
+        }
+
+        .gear-btn:active::after,
+        .gear-btn:active::before {
             background: #4caf50;
         }
 
@@ -480,39 +868,407 @@
             font-size: 28px;
             min-width: 30px;
             text-align: center;
+            color: #fff;
+            padding: 5px 0;
         }
 
-        /* ==================== PANIC BUTTON ==================== */
-        .panic-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: #ff4444;
-            border: none;
-            border-radius: 50%;
-            color: #fff;
+        .gear-mode {
+            font-size: 9px;
+            font-family: 'nothing', sans-serif;
+            color: #555;
+            background: transparent;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            margin-top: 30px;
+        }
+
+        .gear-mode:active {
+            border-color: #555;
+        }
+
+        .gear-mode.auto {
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .gear-title {
             font-size: 10px;
             font-family: 'nothing', sans-serif;
-            cursor: pointer;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            position: relative;
         }
 
-        .panic-btn:active {
+        .gear-title::before,
+        .gear-title::after {
+            content: '·';
+            margin: 0 5px;
+            color: #333;
+        }
+
+        @media (min-width: 768px) {
+            .gear-display {
+                right: 15px;
+                gap: 8px;
+            }
+            .gear-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 32px;
+            }
+            .gear-number {
+                font-size: 36px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .gear-display {
+                right: 8px;
+                gap: 4px;
+            }
+            .gear-btn {
+                width: 69px;
+                height: 69px;
+                border-radius: 12px;
+            }
+            .gear-btn::after {
+                width: 26px;
+                height: 3px;
+            }
+            .gear-btn.plus::before {
+                width: 3px;
+                height: 26px;
+            }
+            .gear-number {
+                font-size: 32px;
+            }
+            .gear-mode {
+                font-size: 10px;
+                padding: 8px 14px;
+                margin-top: 25px;
+            }
+            .gear-title {
+                font-size: 9px;
+                letter-spacing: 2px;
+            }
+        }
+
+        /* ==================== BOTTOM LEFT CONTROLS ==================== */
+        .bottom-left-controls {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        /* ==================== LOCK BUTTON ==================== */
+        .lock-btn {
+            background: transparent;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .lock-btn:active {
+            border-color: #555;
+            background: #222;
+        }
+
+        .lock-btn.locked {
+            border-color: #ff4444;
+        }
+
+        .lock-icon-display {
+            width: 20px;
+            height: 24px;
+            position: relative;
+        }
+
+        .lock-body {
+            position: absolute;
+            bottom: 0;
+            left: 2px;
+            width: 16px;
+            height: 12px;
+            background: #444;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        .lock-btn.locked .lock-body {
+            background: #ff4444;
+        }
+
+        .lock-shackle {
+            position: absolute;
+            top: 0;
+            left: 5px;
+            width: 10px;
+            height: 12px;
+            border: 2px solid #444;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+        }
+
+        .lock-btn.locked .lock-shackle {
+            border-color: #ff4444;
+        }
+
+        .lock-btn:not(.locked) .lock-shackle {
+            transform: translateY(-3px) rotate(15deg);
+            transform-origin: bottom right;
+        }
+
+        .lock-text {
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'nothing', sans-serif;
+        }
+
+        .lock-btn.locked .lock-text {
+            color: #ff4444;
+        }
+
+        @media (min-width: 768px) {
+            .lock-btn {
+                bottom: 20px;
+                left: 20px;
+                padding: 12px 18px;
+            }
+            .lock-text {
+                font-size: 11px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .lock-btn {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            .lock-icon-display {
+                width: 18px;
+                height: 22px;
+            }
+            .lock-body {
+                width: 14px;
+                height: 10px;
+            }
+            .lock-shackle {
+                width: 8px;
+                height: 10px;
+            }
+            .lock-text {
+                font-size: 9px;
+            }
+        }
+
+        /* ==================== PAS DISPLAY ==================== */
+        .pas-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pas-label {
+            font-size: 8px;
+            font-family: 'nothing', sans-serif;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pas-level-btn {
+            width: 50px;
+            height: 50px;
+            background: transparent;
+            border: 2px solid #333;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .pas-level-btn:active {
+            border-color: #4caf50;
             transform: scale(0.95);
         }
 
-        .panic-btn.active {
-            background: #ff8800;
-            animation: panic-pulse 1s infinite;
+        .pas-level-value {
+            font-size: 22px;
+            font-family: 'nothing', sans-serif;
+            color: #4caf50;
         }
 
-        @keyframes panic-pulse {
-            0%, 100% { box-shadow: 0 4px 15px rgba(255, 136, 0, 0.4); }
-            50% { box-shadow: 0 4px 25px rgba(255, 136, 0, 0.8); }
+        .pas-only-btn {
+            background: transparent;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'nothing', sans-serif;
+            font-size: 8px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .pas-only-btn:active {
+            background: #222;
+        }
+
+        .pas-only-btn.active {
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        @media (min-width: 768px) {
+            .bottom-left-controls {
+                bottom: 20px;
+                left: 20px;
+            }
+            .pas-level-btn {
+                width: 55px;
+                height: 55px;
+            }
+            .pas-level-value {
+                font-size: 24px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .bottom-left-controls {
+                bottom: 10px;
+                left: 10px;
+                gap: 8px;
+            }
+            .pas-level-btn {
+                width: 45px;
+                height: 45px;
+            }
+            .pas-level-value {
+                font-size: 20px;
+            }
+            .pas-only-btn {
+                font-size: 7px;
+                padding: 4px 8px;
+            }
+        }
+
+        /* ==================== POWER MODE BUTTON ==================== */
+        .power-mode-btn {
+            position: fixed;
+            bottom: 70px;
+            left: 15px;
+            background: transparent;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: 'nothing', sans-serif;
+        }
+
+        .power-mode-btn:active {
+            border-color: #555;
+            background: #222;
+        }
+
+        .power-mode-icon {
+            font-size: 16px;
+        }
+
+        .power-mode-text {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .power-mode-btn.eco {
+            border-color: #4caf50;
+        }
+        .power-mode-btn.eco .power-mode-text {
+            color: #4caf50;
+        }
+
+        .power-mode-btn.normal {
+            border-color: #2196f3;
+        }
+        .power-mode-btn.normal .power-mode-text {
+            color: #2196f3;
+        }
+
+        .power-mode-btn.sport {
+            border-color: #ff9800;
+        }
+        .power-mode-btn.sport .power-mode-text {
+            color: #ff9800;
+        }
+
+        .power-mode-btn.turbo {
+            border-color: #f44336;
+        }
+        .power-mode-btn.turbo .power-mode-text {
+            color: #f44336;
+        }
+
+        .power-mode-btn.off {
+            border-color: #666;
+            background: #222;
+        }
+        .power-mode-btn.off .power-mode-text {
+            color: #666;
+        }
+        .power-mode-btn.off .power-mode-icon {
+            opacity: 0.3;
+        }
+
+        @media (min-width: 768px) {
+            .power-mode-btn {
+                bottom: 80px;
+                left: 20px;
+                padding: 12px 18px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .power-mode-btn {
+                bottom: 60px;
+                left: 10px;
+                padding: 8px 12px;
+            }
+            .power-mode-icon {
+                font-size: 14px;
+            }
+            .power-mode-text {
+                font-size: 9px;
+            }
         }
 
         /* ==================== SIDE MENU ==================== */
@@ -661,21 +1417,38 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: 15px;
         }
 
         .lock-screen.active {
             display: flex;
         }
 
+        .lock-screen-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 30px;
+            border: 1px solid #333;
+            border-radius: 20px;
+            background: rgba(20, 20, 20, 0.8);
+        }
+
         .lock-icon {
             font-size: 48px;
-            margin-bottom: 30px;
+        }
+
+        .pin-title {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .pin-display {
             font-size: 32px;
             letter-spacing: 10px;
-            margin-bottom: 30px;
             min-height: 40px;
         }
 
@@ -702,6 +1475,128 @@
             background: #4caf50;
         }
 
+        .pin-btn.clear {
+            color: #ff6666;
+            border-color: #552222;
+        }
+
+        .pin-btn.clear:active {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .pin-btn.submit {
+            color: #66ff66;
+            border-color: #225522;
+        }
+
+        .pin-btn.submit:active {
+            background: #4caf50;
+            color: #fff;
+        }
+
+        /* Landscape mode for lock screen */
+        @media (orientation: landscape) and (max-height: 550px) {
+            .lock-screen {
+                flex-direction: row;
+                gap: 50px;
+                padding: 10px;
+            }
+
+            .lock-screen-content {
+                flex-direction: column;
+                gap: 8px;
+                padding: 20px 30px;
+            }
+
+            .lock-icon {
+                font-size: 40px;
+            }
+
+            .pin-title {
+                font-size: 12px;
+            }
+
+            .pin-display {
+                font-size: 28px;
+                letter-spacing: 8px;
+                min-height: 35px;
+            }
+
+            .pin-pad {
+                grid-template-columns: repeat(3, 60px);
+                gap: 10px;
+            }
+
+            .pin-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 22px;
+            }
+        }
+
+        /* Very small landscape screens */
+        @media (orientation: landscape) and (max-height: 400px) {
+            .lock-screen {
+                gap: 20px;
+            }
+
+            .lock-screen-content {
+                padding: 15px 25px;
+            }
+
+            .lock-icon {
+                font-size: 28px;
+            }
+
+            .pin-title {
+                font-size: 10px;
+            }
+
+            .pin-display {
+                font-size: 20px;
+            }
+
+            .pin-pad {
+                grid-template-columns: repeat(3, 45px);
+                gap: 5px;
+            }
+
+            .pin-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 16px;
+            }
+        }
+
+        /* ==================== FULLSCREEN BUTTON ==================== */
+        .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 45px;
+            height: 45px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-btn:active {
+            background: #4caf50;
+        }
+
+        .fullscreen-btn.active {
+            background: #333;
+            border-color: #4caf50;
+        }
+
         /* ==================== NOTHING STYLE DOTS ==================== */
         .nothing-dots {
             display: flex;
@@ -725,8 +1620,11 @@
 <body>
     <!-- LOCK SCREEN -->
     <div class="lock-screen" id="lockScreen">
-        <div class="lock-icon">🔒</div>
-        <div class="pin-display" id="pinDisplay"></div>
+        <div class="lock-screen-content">
+            <div class="lock-icon">🔒</div>
+            <div class="pin-title">Enter PIN</div>
+            <div class="pin-display" id="pinDisplay"></div>
+        </div>
         <div class="pin-pad">
             <button class="pin-btn" onclick="enterPin(1)">1</button>
             <button class="pin-btn" onclick="enterPin(2)">2</button>
@@ -737,9 +1635,9 @@
             <button class="pin-btn" onclick="enterPin(7)">7</button>
             <button class="pin-btn" onclick="enterPin(8)">8</button>
             <button class="pin-btn" onclick="enterPin(9)">9</button>
-            <button class="pin-btn" onclick="clearPin()">C</button>
+            <button class="pin-btn clear" onclick="clearPin()">C</button>
             <button class="pin-btn" onclick="enterPin(0)">0</button>
-            <button class="pin-btn" onclick="submitPin()">OK</button>
+            <button class="pin-btn submit" onclick="submitPin()">OK</button>
         </div>
     </div>
 
@@ -843,22 +1741,40 @@
                     <div class="battemp-container"><div id="battempprogres3" class="battemp-bar"></div></div>
                     <div class="battemp-value" id="battemp3">--°c</div>
                 </div>
+                <div>
+                    <div class="battemp-container"><div id="battempprogres4" class="battemp-bar"></div></div>
+                    <div class="battemp-value" id="battemp4">--°c</div>
+                </div>
             </div>
         </div>
 
         <!-- Battery temps desktop -->
         <div class="battemps-section">
-            <div>
+            <div class="battemps-title">Bat sensors</div>
+            <div class="battemp-item">
+                <div class="battemp-label">B1</div>
                 <div class="battemp-container"><div id="battempprogres1d" class="battemp-bar"></div></div>
                 <div class="battemp-value" id="battemp1d">--°c</div>
             </div>
-            <div>
+            <div class="battemp-item">
+                <div class="battemp-label">B2</div>
                 <div class="battemp-container"><div id="battempprogres2d" class="battemp-bar"></div></div>
                 <div class="battemp-value" id="battemp2d">--°c</div>
             </div>
-            <div>
+            <div class="battemp-item">
+                <div class="battemp-label">B3</div>
                 <div class="battemp-container"><div id="battempprogres3d" class="battemp-bar"></div></div>
                 <div class="battemp-value" id="battemp3d">--°c</div>
+            </div>
+            <div class="battemp-item">
+                <div class="battemp-label">B4</div>
+                <div class="battemp-container"><div id="battempprogres4d" class="battemp-bar"></div></div>
+                <div class="battemp-value" id="battemp4d">--°c</div>
+            </div>
+            <div class="consumption-display">
+                <div class="consumption-label">· Avg ·</div>
+                <div class="consumption-value" id="avgConsumption">--</div>
+                <div class="consumption-unit">Wh/km</div>
             </div>
         </div>
 
@@ -875,15 +1791,45 @@
                     <div class="distance-value" id="tripDistance">0 km</div>
                 </div>
             </div>
-            <div class="slider-container">
-                <div class="slider-track">
-                    <div class="slider-fill" id="sliderFill"></div>
+            <div class="speed-limit-section">
+                <div class="speed-limit-toggle">
+                    <button class="speed-limit-btn" id="speedLimitBtn" onclick="toggleSpeedLimit()">
+                        <svg viewBox="0 0 24 24">
+                            <!-- Speedometer arc -->
+                            <path class="limit-circle" d="M4 18 A10 10 0 1 1 20 18"/>
+                            <!-- Needle -->
+                            <path class="limit-needle" d="M12 17 L16 9"/>
+                            <!-- Limit stop line -->
+                            <line class="limit-line" x1="17" y1="7" x2="20" y2="4"/>
+                        </svg>
+                    </button>
+                    <span class="speed-limit-label">Limit</span>
                 </div>
-                <input type="range" class="slider-input" id="maxSpeedSlider" min="0" max="100" value="0" oninput="updateMaxSpeed(this.value)">
-                <div class="slider-labels">
-                    <span>OFF</span>
-                    <span id="maxSpeedValue">MAX: OFF</span>
-                    <span>100</span>
+                <div class="slider-container">
+                    <div class="slider-title">· Speed Limit ·</div>
+                    <div class="slider-track">
+                        <div class="slider-ticks">
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                            <div class="slider-tick"></div>
+                        </div>
+                        <div class="slider-fill" id="sliderFill"></div>
+                    </div>
+                    <input type="range" class="slider-input" id="maxSpeedSlider" min="0" max="100" value="50" oninput="updateMaxSpeed(this.value)">
+                    <div class="slider-value-display" id="maxSpeedValue"><span>50</span> km/h</div>
+                    <div class="slider-labels">
+                        <span>0</span>
+                        <span>50</span>
+                        <span>100</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -898,15 +1844,46 @@
     <!-- MENU BUTTON (desktop) -->
     <div class="menu-button" onclick="openNav()">☰</div>
 
+    <!-- FULLSCREEN BUTTON -->
+    <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶</button>
+
     <!-- GEAR CONTROL -->
     <div class="gear-display">
-        <button class="gear-btn" onclick="gearDown()">−</button>
+        <div class="gear-title">Gear</div>
+        <button class="gear-btn plus" onclick="gearUp()"></button>
         <span class="gear-number" id="gearNumber">1</span>
-        <button class="gear-btn" onclick="gearUp()">+</button>
+        <button class="gear-btn" onclick="gearDown()"></button>
+        <button class="gear-mode" id="gearMode" onclick="toggleGearMode()">manual</button>
     </div>
 
-    <!-- PANIC BUTTON -->
-    <button class="panic-btn" id="panicBtn" onclick="togglePanic()">PANIC</button>
+    <!-- BOTTOM LEFT CONTROLS -->
+    <div class="bottom-left-controls">
+        <!-- LOCK BUTTON -->
+        <button class="lock-btn" id="lockBtn" onclick="toggleBikeLock()">
+            <div class="lock-icon-display" id="lockIconDisplay">
+                <div class="lock-body"></div>
+                <div class="lock-shackle"></div>
+            </div>
+            <span class="lock-text" id="lockText">unlock</span>
+        </button>
+
+        <!-- PAS LEVEL DISPLAY -->
+        <div class="pas-display" id="pasDisplay">
+            <div class="pas-label">· PAS ·</div>
+            <button class="pas-level-btn" onclick="cyclePasLevel()">
+                <span class="pas-level-value" id="pasLevelValue">5</span>
+            </button>
+            <button class="pas-only-btn" id="pasOnlyBtn" onclick="togglePasOnly()">
+                <span id="pasOnlyText">PAS+T</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- POWER MODE BUTTON -->
+    <button class="power-mode-btn" id="powerModeBtn" onclick="cyclePowerMode()">
+        <span class="power-mode-icon" id="powerModeIcon">⚡</span>
+        <span class="power-mode-text" id="powerModeText">normal</span>
+    </button>
 
     <!-- SIDE MENU -->
     <div id="mySidenav" class="sidenav">
@@ -950,12 +1927,104 @@
                 </div>
             </div>
 
-            <!-- Trailer -->
+            <!-- Auto Gear -->
             <div class="settings-section">
-                <div class="settings-title">Trailer</div>
+                <div class="settings-title">Auto Gear</div>
+                <div class="settings-item">
+                    <span class="settings-label">Hysteresis (km/h)</span>
+                    <input type="number" class="settings-input" id="gearHysteresis" min="1" max="10" value="3" onchange="saveSettings()">
+                </div>
+                <div id="gearSpeedThresholds"></div>
+            </div>
+
+            <!-- PAS Sensor -->
+            <div class="settings-section">
+                <div class="settings-title">PAS Sensor</div>
+                <div class="settings-item">
+                    <span class="settings-label">PAS enabled</span>
+                    <div class="toggle active" id="pasToggle" onclick="togglePas()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Assist level (1-10)</span>
+                    <input type="number" class="settings-input" id="pasLevel" min="1" max="10" value="5" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">PAS magnets</span>
+                    <input type="number" class="settings-input" id="pasMagnets" min="1" max="24" value="12" onchange="saveSettings()">
+                </div>
+            </div>
+
+            <!-- Throttle -->
+            <div class="settings-section">
+                <div class="settings-title">Throttle</div>
+                <div class="settings-item">
+                    <span class="settings-label">Throttle enabled</span>
+                    <div class="toggle active" id="throttleToggle" onclick="toggleThrottle()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Throttle curve</span>
+                    <select class="settings-input" id="throttleCurve" onchange="saveSettings()" style="width:100px">
+                        <option value="linear">Linear</option>
+                        <option value="soft">Soft</option>
+                        <option value="aggressive">Aggressive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Cruise Control -->
+            <div class="settings-section">
+                <div class="settings-title">Cruise Control</div>
+                <div class="settings-item">
+                    <span class="settings-label">Tempomat enabled</span>
+                    <div class="toggle" id="cruiseToggle" onclick="toggleCruise()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Activation delay (s)</span>
+                    <input type="number" class="settings-input" id="cruiseDelay" min="1" max="10" value="3" onchange="saveSettings()">
+                </div>
+            </div>
+
+            <!-- Braking -->
+            <div class="settings-section">
+                <div class="settings-title">Braking</div>
+                <div class="settings-item">
+                    <span class="settings-label">Adaptive braking</span>
+                    <div class="toggle" id="adaptiveBrakeToggle" onclick="toggleAdaptiveBrake()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Min battery for brake (%)</span>
+                    <input type="number" class="settings-input" id="brakeMinBat" min="0" max="95" value="20" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Regen level (%)</span>
+                    <input type="number" class="settings-input" id="regenLevel" min="0" max="100" value="30" onchange="saveSettings()">
+                </div>
                 <div class="settings-item">
                     <span class="settings-label">Trailer braking</span>
                     <div class="toggle" id="trailerToggle" onclick="toggleTrailer()"></div>
+                </div>
+            </div>
+
+            <!-- Power Modes -->
+            <div class="settings-section">
+                <div class="settings-title">Power Mode</div>
+                <div class="settings-item">
+                    <span class="settings-label">Mode</span>
+                    <select class="settings-input" id="powerMode" onchange="saveSettings()" style="width:100px">
+                        <option value="off">OFF</option>
+                        <option value="eco">Eco</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="sport">Sport</option>
+                        <option value="turbo">Turbo</option>
+                    </select>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Walk assist</span>
+                    <div class="toggle" id="walkAssistToggle" onclick="toggleWalkAssist()"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Reverse</span>
+                    <div class="toggle" id="reverseToggle" onclick="toggleReverse()"></div>
                 </div>
             </div>
 
@@ -968,11 +2037,36 @@
                 </div>
                 <div class="settings-item">
                     <span class="settings-label">Max current (A)</span>
-                    <input type="number" class="settings-input" id="limitCurrent" value="50" onchange="saveSettings()">
+                    <input type="number" class="settings-input" id="limitCurrent" value="260" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Max phase current (A)</span>
+                    <input type="number" class="settings-input" id="limitPhase" value="400" onchange="saveSettings()">
                 </div>
                 <div class="settings-item">
                     <span class="settings-label">Max temp (°C)</span>
                     <input type="number" class="settings-input" id="limitTemp" value="80" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Low voltage cutoff (V)</span>
+                    <input type="number" class="settings-input" id="lowVoltage" value="60" step="0.1" onchange="saveSettings()">
+                </div>
+            </div>
+
+            <!-- Battery 20s26p -->
+            <div class="settings-section">
+                <div class="settings-title">Battery (20s26p)</div>
+                <div class="settings-item">
+                    <span class="settings-label">Capacity (Ah)</span>
+                    <input type="number" class="settings-input" id="battCapacity" value="130" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Full voltage (V)</span>
+                    <input type="number" class="settings-input" id="battFull" value="84" step="0.1" onchange="saveSettings()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Empty voltage (V)</span>
+                    <input type="number" class="settings-input" id="battEmpty" value="60" step="0.1" onchange="saveSettings()">
                 </div>
             </div>
 
@@ -1041,28 +2135,69 @@
             wheelPulses: 1,
             gearCount: 8,
             gearPositions: [100, 200, 300, 400, 500, 600, 700, 800],
+            gearSpeedThresholds: [0, 10, 18, 26, 34, 42, 50, 60],
+            gearHysteresis: 3,
+            // PAS
+            pasEnabled: true,
+            pasLevel: 5,
+            pasMagnets: 12,
+            // Throttle
+            throttleEnabled: true,
+            throttleCurve: 'linear',
+            // Cruise
+            cruiseEnabled: false,
+            cruiseDelay: 3,
+            // Braking
+            adaptiveBrake: false,
+            brakeMinBat: 20,
+            regenLevel: 30,
             trailerBraking: false,
+            // Power
+            powerMode: 'normal',
+            walkAssist: false,
+            reverse: false,
+            // Limits
             limitSpeed: 90,
-            limitCurrent: 50,
+            limitCurrent: 260,
+            limitPhase: 400,
             limitTemp: 80,
+            lowVoltage: 60,
+            // Battery 20s26p
+            battCapacity: 130,
+            battFull: 84,
+            battEmpty: 60,
+            // Alarms
             alarmTemp: true,
             alarmBat: true,
             alarmVib: true,
+            // Security
             lockEnabled: false,
             pin: '1234',
+            // Trip
             totalDistance: 0,
             tripDistance: 0
         };
 
         let currentGear = 1;
-        let panicMode = false;
+        let bikeLocked = false;
         let isLocked = false;
+        let gearAutoMode = false;
+        let speedLimitEnabled = false;
+        let savedSpeedLimit = 50;
+        let pasOnlyMode = false;
+        let previousSpeedLimit = 50;
+        let previousSpeedLimitEnabled = false;
 
         // ==================== INIT ====================
         function init() {
             loadSettings();
             updateGearInputs();
             updateUI();
+            updatePowerModeUI();
+            updatePasUI();
+
+            // Initialize slider
+            document.getElementById('sliderFill').style.width = '50%';
 
             if (settings.lockEnabled) {
                 showLockScreen();
@@ -1079,29 +2214,80 @@
         }
 
         function saveSettings() {
+            // Wheel
             settings.wheelCircum = parseInt(document.getElementById('wheelCircum').value) || 2200;
             settings.wheelPulses = parseInt(document.getElementById('wheelPulses').value) || 1;
+            // Gears
+            settings.gearHysteresis = parseInt(document.getElementById('gearHysteresis').value) || 3;
+            // PAS
+            settings.pasLevel = parseInt(document.getElementById('pasLevel').value) || 5;
+            settings.pasMagnets = parseInt(document.getElementById('pasMagnets').value) || 12;
+            // Throttle
+            settings.throttleCurve = document.getElementById('throttleCurve').value || 'linear';
+            // Cruise
+            settings.cruiseDelay = parseInt(document.getElementById('cruiseDelay').value) || 3;
+            // Braking
+            settings.brakeMinBat = parseInt(document.getElementById('brakeMinBat').value) || 20;
+            settings.regenLevel = parseInt(document.getElementById('regenLevel').value) || 30;
+            // Power
+            settings.powerMode = document.getElementById('powerMode').value || 'normal';
+            // Limits
             settings.limitSpeed = parseInt(document.getElementById('limitSpeed').value) || 90;
-            settings.limitCurrent = parseInt(document.getElementById('limitCurrent').value) || 50;
+            settings.limitCurrent = parseInt(document.getElementById('limitCurrent').value) || 260;
+            settings.limitPhase = parseInt(document.getElementById('limitPhase').value) || 400;
             settings.limitTemp = parseInt(document.getElementById('limitTemp').value) || 80;
+            settings.lowVoltage = parseFloat(document.getElementById('lowVoltage').value) || 60;
+            // Battery
+            settings.battCapacity = parseInt(document.getElementById('battCapacity').value) || 130;
+            settings.battFull = parseFloat(document.getElementById('battFull').value) || 84;
+            settings.battEmpty = parseFloat(document.getElementById('battEmpty').value) || 60;
 
             localStorage.setItem('ebikeSettings', JSON.stringify(settings));
         }
 
         function applySettingsToUI() {
+            // Wheel
             document.getElementById('wheelCircum').value = settings.wheelCircum;
             document.getElementById('wheelPulses').value = settings.wheelPulses;
+            // Gears
             document.getElementById('gearCount').value = settings.gearCount;
+            document.getElementById('gearHysteresis').value = settings.gearHysteresis;
+            // PAS
+            document.getElementById('pasLevel').value = settings.pasLevel;
+            document.getElementById('pasMagnets').value = settings.pasMagnets;
+            document.getElementById('pasToggle').classList.toggle('active', settings.pasEnabled);
+            // Throttle
+            document.getElementById('throttleToggle').classList.toggle('active', settings.throttleEnabled);
+            document.getElementById('throttleCurve').value = settings.throttleCurve;
+            // Cruise
+            document.getElementById('cruiseToggle').classList.toggle('active', settings.cruiseEnabled);
+            document.getElementById('cruiseDelay').value = settings.cruiseDelay;
+            // Braking
+            document.getElementById('adaptiveBrakeToggle').classList.toggle('active', settings.adaptiveBrake);
+            document.getElementById('brakeMinBat').value = settings.brakeMinBat;
+            document.getElementById('regenLevel').value = settings.regenLevel;
+            document.getElementById('trailerToggle').classList.toggle('active', settings.trailerBraking);
+            // Power
+            document.getElementById('powerMode').value = settings.powerMode;
+            document.getElementById('walkAssistToggle').classList.toggle('active', settings.walkAssist);
+            document.getElementById('reverseToggle').classList.toggle('active', settings.reverse);
+            // Limits
             document.getElementById('limitSpeed').value = settings.limitSpeed;
             document.getElementById('limitCurrent').value = settings.limitCurrent;
+            document.getElementById('limitPhase').value = settings.limitPhase;
             document.getElementById('limitTemp').value = settings.limitTemp;
-
-            document.getElementById('trailerToggle').classList.toggle('active', settings.trailerBraking);
+            document.getElementById('lowVoltage').value = settings.lowVoltage;
+            // Battery
+            document.getElementById('battCapacity').value = settings.battCapacity;
+            document.getElementById('battFull').value = settings.battFull;
+            document.getElementById('battEmpty').value = settings.battEmpty;
+            // Alarms
             document.getElementById('alarmTempToggle').classList.toggle('active', settings.alarmTemp);
             document.getElementById('alarmBatToggle').classList.toggle('active', settings.alarmBat);
             document.getElementById('alarmVibToggle').classList.toggle('active', settings.alarmVib);
+            // Security
             document.getElementById('lockToggle').classList.toggle('active', settings.lockEnabled);
-
+            // Trip
             document.getElementById('totalDistance').textContent = settings.totalDistance + ' km';
             document.getElementById('tripDistance').textContent = settings.tripDistance.toFixed(1) + ' km';
         }
@@ -1111,6 +2297,7 @@
             const count = parseInt(document.getElementById('gearCount').value) || 8;
             settings.gearCount = Math.min(8, Math.max(1, count));
 
+            // Gear positions (encoder)
             const container = document.getElementById('gearPositions');
             container.innerHTML = '';
 
@@ -1125,11 +2312,35 @@
                 `;
                 container.appendChild(div);
             }
+
+            // Auto gear speed thresholds
+            const thresholdsContainer = document.getElementById('gearSpeedThresholds');
+            if (thresholdsContainer) {
+                thresholdsContainer.innerHTML = '';
+
+                for (let i = 0; i < settings.gearCount; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'settings-item';
+                    div.innerHTML = `
+                        <span class="settings-label">Gear ${i + 1} od (km/h)</span>
+                        <input type="number" class="settings-input" id="gearSpeed${i}"
+                               value="${settings.gearSpeedThresholds[i] || i * 10}"
+                               onchange="updateGearSpeedThreshold(${i})">
+                    `;
+                    thresholdsContainer.appendChild(div);
+                }
+            }
+
             saveSettings();
         }
 
         function updateGearPosition(index) {
             settings.gearPositions[index] = parseInt(document.getElementById(`gearPos${index}`).value) || 0;
+            saveSettings();
+        }
+
+        function updateGearSpeedThreshold(index) {
+            settings.gearSpeedThresholds[index] = parseInt(document.getElementById(`gearSpeed${index}`).value) || 0;
             saveSettings();
         }
 
@@ -1149,6 +2360,58 @@
             }
         }
 
+        function toggleGearMode() {
+            gearAutoMode = !gearAutoMode;
+            const btn = document.getElementById('gearMode');
+            if (gearAutoMode) {
+                btn.textContent = 'auto';
+                btn.classList.add('auto');
+            } else {
+                btn.textContent = 'manual';
+                btn.classList.remove('auto');
+            }
+            // TODO: Send mode to nRF52
+        }
+
+        let lastAutoGearChange = 0;
+        function checkAutoGear(speed) {
+            if (!gearAutoMode) return;
+
+            const now = Date.now();
+            if (now - lastAutoGearChange < 500) return; // Debounce
+
+            const hysteresis = settings.gearHysteresis || 3;
+            let targetGear = 1;
+
+            // Find the right gear for current speed
+            for (let i = settings.gearCount - 1; i >= 0; i--) {
+                const threshold = settings.gearSpeedThresholds[i] || 0;
+                if (speed >= threshold) {
+                    targetGear = i + 1;
+                    break;
+                }
+            }
+
+            // Apply hysteresis - only downshift if below threshold minus hysteresis
+            if (targetGear < currentGear) {
+                const currentThreshold = settings.gearSpeedThresholds[currentGear - 1] || 0;
+                if (speed > currentThreshold - hysteresis) {
+                    return; // Don't downshift yet
+                }
+            }
+
+            if (targetGear !== currentGear) {
+                currentGear = targetGear;
+                document.getElementById('gearNumber').textContent = currentGear;
+                sendGearChange(currentGear);
+                lastAutoGearChange = now;
+
+                if (settings.alarmVib && navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+            }
+        }
+
         function calibrateGear() {
             alert('Move gear to desired position, then click OK');
             // TODO: Read encoder value and save for current gear
@@ -1160,10 +2423,182 @@
         }
 
         // ==================== TOGGLES ====================
+        function togglePas() {
+            settings.pasEnabled = !settings.pasEnabled;
+            document.getElementById('pasToggle').classList.toggle('active', settings.pasEnabled);
+            saveSettings();
+        }
+
+        function toggleThrottle() {
+            settings.throttleEnabled = !settings.throttleEnabled;
+            document.getElementById('throttleToggle').classList.toggle('active', settings.throttleEnabled);
+            saveSettings();
+        }
+
+        function toggleCruise() {
+            settings.cruiseEnabled = !settings.cruiseEnabled;
+            document.getElementById('cruiseToggle').classList.toggle('active', settings.cruiseEnabled);
+            saveSettings();
+        }
+
+        function toggleAdaptiveBrake() {
+            settings.adaptiveBrake = !settings.adaptiveBrake;
+            document.getElementById('adaptiveBrakeToggle').classList.toggle('active', settings.adaptiveBrake);
+            saveSettings();
+        }
+
         function toggleTrailer() {
             settings.trailerBraking = !settings.trailerBraking;
             document.getElementById('trailerToggle').classList.toggle('active', settings.trailerBraking);
             saveSettings();
+        }
+
+        function toggleWalkAssist() {
+            settings.walkAssist = !settings.walkAssist;
+            document.getElementById('walkAssistToggle').classList.toggle('active', settings.walkAssist);
+            saveSettings();
+        }
+
+        function toggleReverse() {
+            settings.reverse = !settings.reverse;
+            document.getElementById('reverseToggle').classList.toggle('active', settings.reverse);
+            saveSettings();
+        }
+
+        const powerModes = ['off', 'eco', 'normal', 'sport', 'turbo'];
+        function cyclePowerMode() {
+            const currentMode = settings.powerMode;
+            const currentIndex = powerModes.indexOf(currentMode);
+            const nextIndex = (currentIndex + 1) % powerModes.length;
+            const wasInOffMode = (currentMode === 'off');
+
+            // Save previous state before entering OFF
+            if (powerModes[nextIndex] === 'off' && currentMode !== 'off') {
+                previousSpeedLimit = savedSpeedLimit;
+                previousSpeedLimitEnabled = speedLimitEnabled;
+            }
+
+            settings.powerMode = powerModes[nextIndex];
+
+            applyPowerMode(wasInOffMode);
+            updatePowerModeUI();
+            document.getElementById('powerMode').value = settings.powerMode;
+            saveSettings();
+
+            if (settings.alarmVib && navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        function applyPowerMode(leavingOffMode = false) {
+            if (settings.powerMode === 'off') {
+                // OFF mode: PAS off, throttle on, max 20 km/h
+                settings.pasEnabled = false;
+                settings.throttleEnabled = true;
+                document.getElementById('pasToggle').classList.remove('active');
+                document.getElementById('throttleToggle').classList.add('active');
+                pasOnlyMode = false;
+                document.getElementById('pasOnlyBtn').classList.remove('active');
+                document.getElementById('pasOnlyText').textContent = 'PAS+T';
+                // Set speed limit to 20 km/h
+                speedLimitEnabled = true;
+                savedSpeedLimit = 20;
+                document.getElementById('speedLimitBtn').classList.add('active');
+                document.getElementById('maxSpeedSlider').value = 20;
+                document.getElementById('sliderFill').style.width = '20%';
+                document.getElementById('maxSpeedValue').innerHTML = '<span>20</span> km/h';
+                if (ebikeService) sendMaxSpeed(20);
+            } else if (leavingOffMode) {
+                // Restore previous speed limit only when leaving OFF mode
+                speedLimitEnabled = previousSpeedLimitEnabled;
+                savedSpeedLimit = previousSpeedLimit;
+
+                if (speedLimitEnabled) {
+                    document.getElementById('speedLimitBtn').classList.add('active');
+                    if (ebikeService) sendMaxSpeed(savedSpeedLimit);
+                } else {
+                    document.getElementById('speedLimitBtn').classList.remove('active');
+                    if (ebikeService) sendMaxSpeed(0);
+                }
+
+                document.getElementById('maxSpeedSlider').value = savedSpeedLimit;
+                document.getElementById('sliderFill').style.width = savedSpeedLimit + '%';
+                document.getElementById('maxSpeedValue').innerHTML = '<span>' + savedSpeedLimit + '</span> km/h';
+            }
+        }
+
+        function setPanicMode() {
+            // Called from handlebar panic button via BLE
+            // Save current state first
+            if (settings.powerMode !== 'off') {
+                previousSpeedLimit = savedSpeedLimit;
+                previousSpeedLimitEnabled = speedLimitEnabled;
+            }
+
+            settings.powerMode = 'off';
+            applyPowerMode(false); // entering OFF, not leaving
+            updatePowerModeUI();
+            document.getElementById('powerMode').value = 'off';
+            saveSettings();
+
+            if (settings.alarmVib && navigator.vibrate) {
+                navigator.vibrate([100, 50, 100, 50, 100]);
+            }
+        }
+
+        function updatePowerModeUI() {
+            const btn = document.getElementById('powerModeBtn');
+            const text = document.getElementById('powerModeText');
+
+            btn.classList.remove('off', 'eco', 'normal', 'sport', 'turbo');
+            btn.classList.add(settings.powerMode);
+            text.textContent = settings.powerMode;
+        }
+
+        function cyclePasLevel() {
+            settings.pasLevel = (settings.pasLevel % 10) + 1;
+            document.getElementById('pasLevelValue').textContent = settings.pasLevel;
+            document.getElementById('pasLevel').value = settings.pasLevel;
+            saveSettings();
+
+            if (settings.alarmVib && navigator.vibrate) {
+                navigator.vibrate(20);
+            }
+            // TODO: Send PAS level to STM32
+        }
+
+        function togglePasOnly() {
+            pasOnlyMode = !pasOnlyMode;
+            const btn = document.getElementById('pasOnlyBtn');
+            const text = document.getElementById('pasOnlyText');
+
+            if (pasOnlyMode) {
+                btn.classList.add('active');
+                text.textContent = 'PAS';
+                // Disable throttle
+                settings.throttleEnabled = false;
+                document.getElementById('throttleToggle').classList.remove('active');
+            } else {
+                btn.classList.remove('active');
+                text.textContent = 'PAS+T';
+                // Enable throttle
+                settings.throttleEnabled = true;
+                document.getElementById('throttleToggle').classList.add('active');
+            }
+            saveSettings();
+
+            if (settings.alarmVib && navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        function updatePasUI() {
+            document.getElementById('pasLevelValue').textContent = settings.pasLevel;
+            if (!settings.throttleEnabled) {
+                pasOnlyMode = true;
+                document.getElementById('pasOnlyBtn').classList.add('active');
+                document.getElementById('pasOnlyText').textContent = 'PAS';
+            }
         }
 
         function toggleAlarmTemp() {
@@ -1190,20 +2625,119 @@
             saveSettings();
         }
 
-        // ==================== PANIC MODE ====================
-        function togglePanic() {
-            panicMode = !panicMode;
-            document.getElementById('panicBtn').classList.toggle('active', panicMode);
+        // ==================== BIKE LOCK ====================
+        async function toggleBikeLock() {
+            if (bikeLocked) {
+                // Need to unlock - show PIN prompt
+                showUnlockPrompt();
+            } else {
+                // Lock the bike
+                await sendLockCommand(true);
+            }
+        }
 
-            if (panicMode) {
-                // Send 20 km/h limit to nRF52
-                sendMaxSpeed(20);
-                if (settings.alarmVib && navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]);
+        async function sendLockCommand(lock, pin = '') {
+            const btn = document.getElementById('lockBtn');
+            const text = document.getElementById('lockText');
+
+            if (ebikeService) {
+                try {
+                    const characteristic = await ebikeService.getCharacteristic(LOCK_CHAR_UUID);
+                    let data;
+                    if (lock) {
+                        data = new Uint8Array([1]); // 1 = lock
+                    } else {
+                        // 0 = unlock, followed by PIN
+                        const encoder = new TextEncoder();
+                        const pinBytes = encoder.encode(pin);
+                        data = new Uint8Array(1 + pinBytes.length);
+                        data[0] = 0;
+                        data.set(pinBytes, 1);
+                    }
+                    await characteristic.writeValue(data);
+
+                    bikeLocked = lock;
+                    if (bikeLocked) {
+                        btn.classList.add('locked');
+                        text.textContent = 'locked';
+                        if (settings.alarmVib && navigator.vibrate) {
+                            navigator.vibrate([50, 30, 50]);
+                        }
+                    } else {
+                        btn.classList.remove('locked');
+                        text.textContent = 'unlock';
+                        if (settings.alarmVib && navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Lock command failed:', error);
+                    if (settings.alarmVib && navigator.vibrate) {
+                        navigator.vibrate([100, 50, 100, 50, 100]);
+                    }
+                    return false;
                 }
             } else {
-                // Only phone can disable - already on phone so OK
-                sendMaxSpeed(0); // Remove limit
+                // No BLE - use local state only
+                bikeLocked = lock;
+                if (bikeLocked) {
+                    btn.classList.add('locked');
+                    text.textContent = 'locked';
+                } else {
+                    btn.classList.remove('locked');
+                    text.textContent = 'unlock';
+                }
+                return true;
+            }
+        }
+
+        function showUnlockPrompt() {
+            const pin = prompt('Enter PIN to unlock:');
+            if (pin) {
+                sendLockCommand(false, pin);
+            }
+        }
+
+        async function changePinViaBLE(oldPin, newPin) {
+            if (!ebikeService) {
+                console.log('BLE not connected');
+                return false;
+            }
+            try {
+                const characteristic = await ebikeService.getCharacteristic(PIN_CHAR_UUID);
+                const encoder = new TextEncoder();
+                const oldPinBytes = encoder.encode(oldPin);
+                const newPinBytes = encoder.encode(newPin);
+                const data = new Uint8Array(oldPinBytes.length + newPinBytes.length);
+                data.set(oldPinBytes, 0);
+                data.set(newPinBytes, oldPinBytes.length);
+                await characteristic.writeValue(data);
+                console.log('PIN changed successfully');
+                return true;
+            } catch (error) {
+                console.error('PIN change failed:', error);
+                return false;
+            }
+        }
+
+        async function readLockState() {
+            if (!ebikeService) return;
+            try {
+                const characteristic = await ebikeService.getCharacteristic(LOCK_CHAR_UUID);
+                const value = await characteristic.readValue();
+                bikeLocked = value.getUint8(0) === 1;
+                const btn = document.getElementById('lockBtn');
+                const text = document.getElementById('lockText');
+                if (bikeLocked) {
+                    btn.classList.add('locked');
+                    text.textContent = 'locked';
+                } else {
+                    btn.classList.remove('locked');
+                    text.textContent = 'unlock';
+                }
+            } catch (error) {
+                console.error('Failed to read lock state:', error);
             }
         }
 
@@ -1253,14 +2787,36 @@
             document.getElementById('pinDisplay').textContent = '●'.repeat(enteredPin.length);
         }
 
-        function changePin() {
-            const newPin = prompt('Enter new 4-digit PIN:');
-            if (newPin && newPin.length === 4 && /^\d+$/.test(newPin)) {
+        async function changePin() {
+            const oldPin = prompt('Enter current PIN:');
+            if (!oldPin) return;
+
+            const newPin = prompt('Enter new PIN (4-8 digits):');
+            if (!newPin || newPin.length < 4 || newPin.length > 8 || !/^\d+$/.test(newPin)) {
+                alert('PIN must be 4-8 digits');
+                return;
+            }
+
+            const confirmPin = prompt('Confirm new PIN:');
+            if (newPin !== confirmPin) {
+                alert('PINs do not match');
+                return;
+            }
+
+            if (ebikeService) {
+                const success = await changePinViaBLE(oldPin, newPin);
+                if (success) {
+                    settings.pin = newPin;
+                    saveSettings();
+                    alert('PIN changed on device!');
+                } else {
+                    alert('Failed to change PIN. Check old PIN.');
+                }
+            } else {
+                // No BLE - just save locally
                 settings.pin = newPin;
                 saveSettings();
-                alert('PIN changed!');
-            } else {
-                alert('PIN must be 4 digits');
+                alert('PIN changed locally (connect to sync with device)');
             }
         }
 
@@ -1273,21 +2829,43 @@
             }
         }
 
-        // ==================== MAX SPEED SLIDER ====================
+        // ==================== SPEED LIMIT ====================
+        function toggleSpeedLimit() {
+            speedLimitEnabled = !speedLimitEnabled;
+            const btn = document.getElementById('speedLimitBtn');
+
+            if (speedLimitEnabled) {
+                btn.classList.add('active');
+                // Apply the saved speed limit
+                if (ebikeService && !bikeLocked) {
+                    sendMaxSpeed(savedSpeedLimit);
+                }
+                if (settings.alarmVib && navigator.vibrate) {
+                    navigator.vibrate([50, 30, 50]);
+                }
+            } else {
+                btn.classList.remove('active');
+                // Remove speed limit
+                if (ebikeService && !bikeLocked) {
+                    sendMaxSpeed(0);
+                }
+                if (settings.alarmVib && navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }
+        }
+
         function updateMaxSpeed(value) {
             const fill = document.getElementById('sliderFill');
             const label = document.getElementById('maxSpeedValue');
 
             fill.style.width = value + '%';
+            savedSpeedLimit = parseInt(value);
+            label.innerHTML = '<span>' + value + '</span> km/h';
 
-            if (value < 5 || value > 95) {
-                label.textContent = 'MAX: OFF';
-            } else {
-                label.textContent = 'MAX: ' + value + ' km/h';
-            }
-
-            if (ebikeService && !panicMode) {
-                sendMaxSpeed(parseInt(value));
+            // Only send if limit is enabled
+            if (speedLimitEnabled && ebikeService && !bikeLocked) {
+                sendMaxSpeed(savedSpeedLimit);
             }
         }
 
@@ -1381,6 +2959,8 @@
         const BATTERY_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef3';
         const TEMPS_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef4';
         const MAXSPEED_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef5';
+        const PIN_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef6';
+        const LOCK_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef7';
 
         let bleDevice = null;
         let bleServer = null;
@@ -1408,6 +2988,9 @@
                 await subscribeToCharacteristic(CURRENT_CHAR_UUID, handleCurrent);
                 await subscribeToCharacteristic(BATTERY_CHAR_UUID, handleBattery);
                 await subscribeToCharacteristic(TEMPS_CHAR_UUID, handleTemps);
+
+                // Read initial lock state from MCU
+                await readLockState();
 
                 updateBLEStatus('connected');
 
@@ -1463,6 +3046,7 @@
         function handleSpeed(event) {
             const value = event.target.value.getUint8(0);
             updateSPEED(value);
+            checkAutoGear(value);
 
             // Check alarm
             if (value > settings.limitSpeed && settings.alarmTemp) {
@@ -1494,6 +3078,7 @@
             const tempBat1 = data.getInt8(3);
             const tempBat2 = data.getInt8(4);
             const tempBat3 = data.getInt8(5);
+            const tempBat4 = data.byteLength > 6 ? data.getInt8(6) : 0;
 
             document.getElementById('tempENGINE').textContent = tempEngine + '°c';
             document.getElementById('tempCONTROLLER').textContent = tempController + '°c';
@@ -1502,9 +3087,10 @@
             updateTEMPBAT(1, tempBat1);
             updateTEMPBAT(2, tempBat2);
             updateTEMPBAT(3, tempBat3);
+            updateTEMPBAT(4, tempBat4);
 
             // Check temp alarms
-            const maxTemp = Math.max(tempEngine, tempController, tempBat1, tempBat2, tempBat3);
+            const maxTemp = Math.max(tempEngine, tempController, tempBat1, tempBat2, tempBat3, tempBat4);
             if (maxTemp > settings.limitTemp && settings.alarmTemp) {
                 triggerAlarm('Temperature limit exceeded!');
             }
@@ -1525,8 +3111,124 @@
             console.log('Gear changed to:', gear);
         }
 
+        // ==================== FULLSCREEN ====================
+        function toggleFullscreen() {
+            const btn = document.getElementById('fullscreenBtn');
+
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                // Enter fullscreen
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+                btn.classList.add('active');
+                btn.textContent = '⛶';
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                btn.classList.remove('active');
+            }
+        }
+
+        // Listen for fullscreen change
+        document.addEventListener('fullscreenchange', updateFullscreenBtn);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenBtn);
+
+        function updateFullscreenBtn() {
+            const btn = document.getElementById('fullscreenBtn');
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+
+        // ==================== SIMULATION ====================
+        let simTemps = [25, 26, 24, 27];
+        let simSpeed = 0;
+        let simCurrent = 0;
+        let simBattery = 85;
+        let simEngineTemp = 30;
+        let simControllerTemp = 28;
+        let simOutdoorTemp = 22;
+        let simDistance = 0;
+        let simTotalWh = 0;
+        let simVoltage = 72;
+
+        function runSimulation() {
+            setInterval(() => {
+                // Simulate battery temps slowly rising/falling
+                for (let i = 0; i < 4; i++) {
+                    simTemps[i] += (Math.random() - 0.4) * 2;
+                    simTemps[i] = Math.max(15, Math.min(65, simTemps[i]));
+                    updateTEMPBAT(i + 1, Math.round(simTemps[i]));
+                }
+
+                // Simulate speed
+                simSpeed += (Math.random() - 0.3) * 5;
+                simSpeed = Math.max(0, Math.min(99, simSpeed));
+                updateSPEED(Math.round(simSpeed));
+                checkAutoGear(Math.round(simSpeed));
+
+                // Simulate current
+                simCurrent = simSpeed * 0.15 + Math.random() * 2;
+                updateCURRENT(simCurrent.toFixed(2));
+
+                // Simulate battery drain
+                if (simSpeed > 5) simBattery -= 0.02;
+                simBattery = Math.max(0, Math.min(100, simBattery));
+                updateBATPRO(Math.round(simBattery));
+                document.getElementById('progressBAT').textContent = (48 + simBattery * 0.24).toFixed(1) + 'v';
+
+                // Simulate distance and consumption
+                if (simSpeed > 0) {
+                    simDistance += simSpeed / 3600 * 0.5; // km per 0.5s
+                    simTotalWh += (simVoltage * simCurrent) / 3600 * 0.5; // Wh per 0.5s
+                }
+
+                // Calculate and display avg consumption
+                if (simDistance > 0.1) {
+                    const avgConsumption = simTotalWh / simDistance;
+                    document.getElementById('avgConsumption').textContent = avgConsumption.toFixed(1);
+                }
+
+                // Simulate other temps
+                simEngineTemp += (Math.random() - 0.45) * 1;
+                simControllerTemp += (Math.random() - 0.45) * 0.8;
+                simEngineTemp = Math.max(25, Math.min(80, simEngineTemp));
+                simControllerTemp = Math.max(25, Math.min(70, simControllerTemp));
+
+                document.getElementById('tempENGINE').textContent = Math.round(simEngineTemp) + '°c';
+                document.getElementById('tempCONTROLLER').textContent = Math.round(simControllerTemp) + '°c';
+                document.getElementById('tempOUTDOR').textContent = Math.round(simOutdoorTemp) + '°c';
+
+            }, 500);
+        }
+
         // ==================== START ====================
         init();
+        runSimulation();
+
+        // ==================== SERVICE WORKER ====================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered:', reg.scope))
+                .catch(err => console.log('Service Worker registration failed:', err));
+        }
     </script>
 </body>
 </html>
