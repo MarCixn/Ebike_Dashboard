@@ -2968,20 +2968,38 @@
 
         async function connectBLE() {
             try {
+                // If already connected, disconnect first
+                if (bleServer && bleServer.connected) {
+                    disconnectBLE();
+                    return;
+                }
+
                 updateBLEStatus('connecting');
 
-                bleDevice = await navigator.bluetooth.requestDevice({
-                    filters: [
-                        { name: 'Ebike' },
-                        { namePrefix: 'Ebike' },
-                        { services: [EBIKE_SERVICE_UUID] }
-                    ],
-                    optionalServices: [EBIKE_SERVICE_UUID]
-                });
+                // Try to reconnect to existing device, or request new one
+                if (bleDevice && bleDevice.gatt) {
+                    try {
+                        bleServer = await bleDevice.gatt.connect();
+                    } catch (e) {
+                        // Device no longer available, request new one
+                        bleDevice = null;
+                    }
+                }
 
-                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+                if (!bleDevice) {
+                    bleDevice = await navigator.bluetooth.requestDevice({
+                        filters: [
+                            { name: 'Ebike' },
+                            { namePrefix: 'Ebike' },
+                            { services: [EBIKE_SERVICE_UUID] }
+                        ],
+                        optionalServices: [EBIKE_SERVICE_UUID]
+                    });
 
-                bleServer = await bleDevice.gatt.connect();
+                    bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+                    bleServer = await bleDevice.gatt.connect();
+                }
+
                 ebikeService = await bleServer.getPrimaryService(EBIKE_SERVICE_UUID);
 
                 await subscribeToCharacteristic(SPEED_CHAR_UUID, handleSpeed);
@@ -2997,7 +3015,21 @@
             } catch (error) {
                 console.error('BLE Error:', error);
                 updateBLEStatus('disconnected');
+                cleanupBLE();
             }
+        }
+
+        function disconnectBLE() {
+            if (bleServer && bleServer.connected) {
+                bleServer.disconnect();
+            }
+            cleanupBLE();
+        }
+
+        function cleanupBLE() {
+            ebikeService = null;
+            bleServer = null;
+            // Keep bleDevice for potential reconnection
         }
 
         async function subscribeToCharacteristic(uuid, handler) {
@@ -3008,7 +3040,7 @@
 
         function onDisconnected() {
             updateBLEStatus('disconnected');
-            ebikeService = null;
+            cleanupBLE();
         }
 
         function updateBLEStatus(status) {
