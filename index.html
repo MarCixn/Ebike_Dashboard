@@ -3159,17 +3159,28 @@
             }
         });
 
+        let isConnecting = false;
+
         async function connectBLE() {
+            // Prevent double-clicks
+            if (isConnecting) return;
+
             try {
-                // If already connected, disconnect first
+                // If already connected, disconnect and wait
                 if (bleServer && bleServer.connected) {
-                    disconnectBLE();
+                    console.log('Disconnecting...');
+                    updateBLEStatus('disconnected');
+                    bleServer.disconnect();
+                    cleanupBLE();
+                    // Wait for nRF to restart advertising
+                    await new Promise(r => setTimeout(r, 1500));
                     return;
                 }
 
+                isConnecting = true;
                 updateBLEStatus('connecting');
 
-                // Always request a new device - more reliable after page refresh
+                // Always request a new device
                 bleDevice = await navigator.bluetooth.requestDevice({
                     filters: [
                         { name: 'Ebike' },
@@ -3179,7 +3190,20 @@
                 });
 
                 bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
-                bleServer = await bleDevice.gatt.connect();
+
+                // Try to connect with retry
+                let retries = 3;
+                while (retries > 0) {
+                    try {
+                        bleServer = await bleDevice.gatt.connect();
+                        break;
+                    } catch (e) {
+                        retries--;
+                        if (retries === 0) throw e;
+                        console.log('Retrying connection...');
+                        await new Promise(r => setTimeout(r, 500));
+                    }
+                }
 
                 ebikeService = await bleServer.getPrimaryService(EBIKE_SERVICE_UUID);
 
@@ -3202,19 +3226,30 @@
                 }
 
                 updateBLEStatus('connected');
+                console.log('BLE connected successfully');
 
             } catch (error) {
                 console.error('BLE Error:', error);
                 updateBLEStatus('disconnected');
                 cleanupBLE();
+            } finally {
+                isConnecting = false;
             }
         }
 
         function disconnectBLE() {
-            if (bleServer && bleServer.connected) {
-                bleServer.disconnect();
+            console.log('disconnectBLE called');
+            if (bleServer) {
+                try {
+                    if (bleServer.connected) {
+                        bleServer.disconnect();
+                    }
+                } catch (e) {
+                    console.log('Disconnect error (ignored):', e);
+                }
             }
             cleanupBLE();
+            updateBLEStatus('disconnected');
         }
 
         function cleanupBLE() {
@@ -3230,7 +3265,9 @@
             characteristic.addEventListener('characteristicvaluechanged', handler);
         }
 
-        function onDisconnected() {
+        function onDisconnected(event) {
+            console.log('BLE disconnected event', event);
+            isConnecting = false;
             updateBLEStatus('disconnected');
             cleanupBLE();
         }
