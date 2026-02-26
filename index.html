@@ -3172,8 +3172,9 @@
                     updateBLEStatus('disconnected');
                     bleServer.disconnect();
                     cleanupBLE();
-                    // Wait for nRF to restart advertising
-                    await new Promise(r => setTimeout(r, 1500));
+                    // Wait for nRF to restart advertising (needs ~3s)
+                    await new Promise(r => setTimeout(r, 3000));
+                    console.log('Ready to reconnect');
                     return;
                 }
 
@@ -3191,17 +3192,23 @@
 
                 bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
 
-                // Try to connect with retry
-                let retries = 3;
+                // Try to connect with retry (nRF needs time to restart advertising)
+                let retries = 5;
+                let lastError;
                 while (retries > 0) {
                     try {
+                        console.log(`Connection attempt ${6 - retries}/5...`);
                         bleServer = await bleDevice.gatt.connect();
                         break;
                     } catch (e) {
+                        lastError = e;
                         retries--;
-                        if (retries === 0) throw e;
-                        console.log('Retrying connection...');
-                        await new Promise(r => setTimeout(r, 500));
+                        if (retries === 0) {
+                            console.error('All connection attempts failed');
+                            throw e;
+                        }
+                        console.log(`Connection failed, retrying in 1s... (${retries} left)`);
+                        await new Promise(r => setTimeout(r, 1000));
                     }
                 }
 
