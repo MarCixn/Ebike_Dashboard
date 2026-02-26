@@ -1516,6 +1516,113 @@
         }
 
         /* ==================== LOCK SCREEN ==================== */
+        /* BLE Auth Screen */
+        .ble-auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0a0a15 100%);
+            z-index: 400;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .ble-auth-screen.active {
+            display: flex;
+        }
+
+        .ble-auth-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 30px;
+            border: 2px solid #00d4ff;
+            border-radius: 20px;
+            background: rgba(0, 212, 255, 0.05);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .ble-auth-icon {
+            font-size: 50px;
+        }
+
+        .ble-auth-title {
+            color: #00d4ff;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .ble-auth-subtitle {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .ble-auth-display {
+            font-size: 36px;
+            color: #fff;
+            letter-spacing: 12px;
+            min-height: 45px;
+            font-family: monospace;
+        }
+
+        .ble-auth-attempts {
+            color: #ff4444;
+            font-size: 12px;
+            min-height: 18px;
+        }
+
+        .ble-auth-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            gap: 12px;
+        }
+
+        .ble-auth-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 2px solid #00d4ff;
+            background: transparent;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ble-auth-btn:hover, .ble-auth-btn:active {
+            background: rgba(0, 212, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .ble-auth-btn.clear {
+            border-color: #ff8800;
+            color: #ff8800;
+        }
+
+        .ble-auth-btn.submit {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        .ble-auth-btn.error {
+            animation: shake 0.5s;
+            border-color: #ff4444;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
         .lock-screen {
             position: fixed;
             top: 0;
@@ -1729,6 +1836,31 @@
     </style>
 </head>
 <body>
+    <!-- BLE AUTH SCREEN (appears after BLE connection if PIN required) -->
+    <div class="ble-auth-screen" id="bleAuthScreen">
+        <div class="ble-auth-content">
+            <div class="ble-auth-icon">🔐</div>
+            <div class="ble-auth-title">Bluetooth PIN</div>
+            <div class="ble-auth-subtitle" id="bleAuthSubtitle">Enter PIN to continue</div>
+            <div class="ble-auth-display" id="bleAuthDisplay"></div>
+            <div class="ble-auth-attempts" id="bleAuthAttempts"></div>
+        </div>
+        <div class="ble-auth-pad">
+            <button class="ble-auth-btn" onclick="enterBlePin(1)">1</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(2)">2</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(3)">3</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(4)">4</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(5)">5</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(6)">6</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(7)">7</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(8)">8</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(9)">9</button>
+            <button class="ble-auth-btn clear" onclick="clearBlePin()">C</button>
+            <button class="ble-auth-btn" onclick="enterBlePin(0)">0</button>
+            <button class="ble-auth-btn submit" onclick="submitBlePin()">OK</button>
+        </div>
+    </div>
+
     <!-- LOCK SCREEN -->
     <div class="lock-screen" id="lockScreen">
         <div class="lock-screen-content">
@@ -3147,10 +3279,13 @@
         const MAXSPEED_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef5';
         const PIN_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef6';
         const LOCK_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef7';
+        const AUTH_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef9';
 
         let bleDevice = null;
         let bleServer = null;
         let ebikeService = null;
+        let pinAttempts = 0;
+        let isAuthenticated = false;
 
         // Properly disconnect before page unload
         window.addEventListener('beforeunload', () => {
@@ -3235,6 +3370,9 @@
                 updateBLEStatus('connected');
                 console.log('BLE connected successfully');
 
+                // Check if PIN authentication is required
+                await checkBleAuth();
+
             } catch (error) {
                 console.error('BLE Error:', error);
                 updateBLEStatus('disconnected');
@@ -3264,6 +3402,9 @@
             bleServer = null;
             ledCharacteristic = null;
             bleDevice = null;  // Clear device - always request fresh
+            isAuthenticated = false;
+            pinAttempts = 0;
+            hideBleAuthScreen();
         }
 
         async function subscribeToCharacteristic(uuid, handler) {
@@ -3485,6 +3626,140 @@
                 document.getElementById('tempOUTDOR').textContent = Math.round(simOutdoorTemp) + '°c';
 
             }, 500);
+        }
+
+        // ==================== BLE AUTHENTICATION ====================
+
+        let blePinEntry = [];
+        const MAX_BLE_PIN_ATTEMPTS = 3;
+
+        async function checkBleAuth() {
+            if (!ebikeService) return;
+
+            try {
+                const authChar = await ebikeService.getCharacteristic(AUTH_CHAR_UUID);
+                const value = await authChar.readValue();
+                const pinEnabled = value.getUint8(0);
+                const authenticated = value.getUint8(1);
+
+                console.log('Auth check: pinEnabled=' + pinEnabled + ', authenticated=' + authenticated);
+
+                if (pinEnabled && !authenticated) {
+                    // Show PIN entry screen
+                    showBleAuthScreen();
+                } else {
+                    // No PIN required or already authenticated
+                    isAuthenticated = true;
+                    hideBleAuthScreen();
+                }
+            } catch (e) {
+                console.log('Auth characteristic not available:', e);
+                // If no auth characteristic, assume no PIN needed
+                isAuthenticated = true;
+            }
+        }
+
+        function showBleAuthScreen() {
+            document.getElementById('bleAuthScreen').classList.add('active');
+            document.getElementById('bleAuthDisplay').textContent = '';
+            document.getElementById('bleAuthAttempts').textContent = '';
+            document.getElementById('bleAuthSubtitle').textContent = 'Enter PIN to continue';
+            blePinEntry = [];
+            pinAttempts = 0;
+        }
+
+        function hideBleAuthScreen() {
+            const screen = document.getElementById('bleAuthScreen');
+            if (screen) screen.classList.remove('active');
+            blePinEntry = [];
+        }
+
+        function enterBlePin(digit) {
+            if (blePinEntry.length < 4) {
+                blePinEntry.push(digit);
+                updateBlePinDisplay();
+            }
+        }
+
+        function clearBlePin() {
+            blePinEntry = [];
+            updateBlePinDisplay();
+        }
+
+        function updateBlePinDisplay() {
+            const display = document.getElementById('bleAuthDisplay');
+            display.textContent = '●'.repeat(blePinEntry.length);
+        }
+
+        async function submitBlePin() {
+            if (blePinEntry.length !== 4) {
+                shakeBlePinPad();
+                return;
+            }
+
+            if (!ebikeService) {
+                console.error('Not connected');
+                return;
+            }
+
+            try {
+                // Send PIN to nRF for verification
+                const authChar = await ebikeService.getCharacteristic(AUTH_CHAR_UUID);
+                const pinData = new Uint8Array(blePinEntry);
+                await authChar.writeValue(pinData);
+
+                // Wait a moment then check auth status
+                await new Promise(r => setTimeout(r, 100));
+
+                const value = await authChar.readValue();
+                const pinEnabled = value.getUint8(0);
+                const authenticated = value.getUint8(1);
+
+                console.log('After PIN submit: authenticated=' + authenticated);
+
+                if (authenticated) {
+                    // Success!
+                    isAuthenticated = true;
+                    document.getElementById('bleAuthSubtitle').textContent = 'Access granted!';
+                    document.getElementById('bleAuthSubtitle').style.color = '#00ff88';
+                    setTimeout(() => {
+                        hideBleAuthScreen();
+                        document.getElementById('bleAuthSubtitle').style.color = '';
+                    }, 500);
+                } else {
+                    // Wrong PIN
+                    pinAttempts++;
+                    blePinEntry = [];
+                    updateBlePinDisplay();
+                    shakeBlePinPad();
+
+                    if (pinAttempts >= MAX_BLE_PIN_ATTEMPTS) {
+                        document.getElementById('bleAuthAttempts').textContent = 'Too many attempts - disconnecting...';
+                        setTimeout(() => {
+                            disconnectBLE();
+                            hideBleAuthScreen();
+                        }, 1500);
+                    } else {
+                        document.getElementById('bleAuthAttempts').textContent =
+                            `Wrong PIN! ${MAX_BLE_PIN_ATTEMPTS - pinAttempts} attempts left`;
+                    }
+                }
+            } catch (e) {
+                console.error('PIN verification error:', e);
+                shakeBlePinPad();
+            }
+        }
+
+        function shakeBlePinPad() {
+            const pad = document.querySelector('.ble-auth-pad');
+            pad.classList.add('error');
+            setTimeout(() => pad.classList.remove('error'), 500);
+
+            // Also shake buttons
+            document.querySelectorAll('.ble-auth-btn').forEach(btn => {
+                btn.classList.add('error');
+                setTimeout(() => btn.classList.remove('error'), 500);
+            });
         }
 
         // ==================== LED RGB CONTROL ====================
