@@ -1271,6 +1271,63 @@
             }
         }
 
+        /* ==================== LED QUICK BUTTON ==================== */
+        .led-quick-btn {
+            position: fixed;
+            bottom: 130px;
+            left: 15px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-family: 'nothing', sans-serif;
+        }
+
+        .led-quick-btn:active {
+            border-color: #00ffff;
+            background: linear-gradient(135deg, #0a0a1e 0%, #162050 100%);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .led-icon {
+            font-size: 16px;
+        }
+
+        .led-mode-text {
+            color: #00ffff;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media (min-width: 768px) {
+            .led-quick-btn {
+                bottom: 140px;
+                left: 20px;
+                padding: 12px 18px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 550px) {
+            .led-quick-btn {
+                bottom: 110px;
+                left: 10px;
+                padding: 8px 12px;
+            }
+            .led-icon {
+                font-size: 14px;
+            }
+            .led-mode-text {
+                font-size: 9px;
+            }
+        }
+
         /* ==================== SIDE MENU ==================== */
         .sidenav {
             height: 100%;
@@ -1357,6 +1414,60 @@
             font-family: 'nothing', sans-serif;
             cursor: pointer;
             transition: background 0.2s;
+        }
+
+        /* LED Preset Buttons */
+        .led-preset-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-family: 'nothing', sans-serif;
+            font-size: 11px;
+            cursor: pointer;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        .led-preset-btn:active {
+            transform: scale(0.95);
+        }
+
+        .led-preset-btn:hover {
+            box-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* Gradient Color Inputs */
+        .gradient-color {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 0;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.2s;
+        }
+
+        .gradient-color:hover {
+            border-color: #888;
+            transform: scale(1.1);
+        }
+
+        /* Range inputs styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: #333;
+            border-radius: 5px;
+            height: 8px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #00ffff;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
         .settings-btn:active {
@@ -1885,6 +1996,12 @@
         <span class="power-mode-text" id="powerModeText">normal</span>
     </button>
 
+    <!-- LED QUICK BUTTON -->
+    <button class="led-quick-btn" id="ledQuickBtn" onclick="cycleLedMode()">
+        <span class="led-icon">💡</span>
+        <span class="led-mode-text" id="ledModeText">gradient</span>
+    </button>
+
     <!-- SIDE MENU -->
     <div id="mySidenav" class="sidenav">
         <span class="closebtn" onclick="closeNav()">×</span>
@@ -2110,6 +2227,75 @@
             </div>
 
             <!-- Info -->
+            <!-- LED RGB Section -->
+            <div class="settings-section">
+                <div class="settings-title">LED RGB</div>
+                <div class="settings-item">
+                    <span class="settings-label">Mode</span>
+                    <select class="settings-input" id="ledMode" onchange="setLedMode()" style="width:120px">
+                        <option value="0">Off</option>
+                        <option value="1">Solid</option>
+                        <option value="2">Breathing</option>
+                        <option value="3">Rainbow</option>
+                        <option value="4">Gear</option>
+                        <option value="5">Cadence</option>
+                        <option value="6">Speed</option>
+                        <option value="9">Strobe</option>
+                        <option value="10">Candle</option>
+                        <option value="11" selected>Gradient</option>
+                    </select>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Brightness</span>
+                    <input type="range" class="settings-input" id="ledBrightness" min="0" max="255" value="200"
+                           style="width:100px" oninput="setLedBrightness()">
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Speed</span>
+                    <input type="range" class="settings-input" id="ledSpeed" min="1" max="255" value="128"
+                           style="width:100px" oninput="setLedSpeed()">
+                </div>
+                <div class="settings-item" id="ledSolidColorItem">
+                    <span class="settings-label">Color</span>
+                    <input type="color" class="settings-input" id="ledColor" value="#00ffff"
+                           style="width:60px;height:30px;padding:0;border:none" onchange="setLedColor()">
+                </div>
+
+                <!-- Gradient Colors -->
+                <div id="gradientSection">
+                    <div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                        <span class="settings-label">Gradient Colors</span>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                            <input type="color" class="gradient-color" id="gradColor0" value="#ff0000" onchange="updateGradient()">
+                            <input type="color" class="gradient-color" id="gradColor1" value="#00ff00" onchange="updateGradient()">
+                            <input type="color" class="gradient-color" id="gradColor2" value="#0000ff" onchange="updateGradient()">
+                            <input type="color" class="gradient-color" id="gradColor3" value="#ffff00" onchange="updateGradient()" style="display:none">
+                            <input type="color" class="gradient-color" id="gradColor4" value="#ff00ff" onchange="updateGradient()" style="display:none">
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Colors count</span>
+                        <input type="number" class="settings-input" id="gradientCount" min="2" max="5" value="3"
+                               style="width:50px" onchange="updateGradientCount()">
+                    </div>
+                    <div class="settings-item">
+                        <button class="settings-btn" onclick="applyGradient()">Apply Gradient</button>
+                    </div>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                    <span class="settings-label">Presets</span>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap">
+                        <button class="led-preset-btn" onclick="ledPreset('fire')" style="background:linear-gradient(90deg,#ff0000,#ff8000,#ffff00)">Fire</button>
+                        <button class="led-preset-btn" onclick="ledPreset('ocean')" style="background:linear-gradient(90deg,#0000ff,#00ffff,#00ff80)">Ocean</button>
+                        <button class="led-preset-btn" onclick="ledPreset('sunset')" style="background:linear-gradient(90deg,#ff0080,#ff8000,#ffff00)">Sunset</button>
+                        <button class="led-preset-btn" onclick="ledPreset('forest')" style="background:linear-gradient(90deg,#004400,#00ff00,#88ff00)">Forest</button>
+                        <button class="led-preset-btn" onclick="ledPreset('neon')" style="background:linear-gradient(90deg,#ff00ff,#00ffff,#ff00ff)">Neon</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="settings-section">
                 <div class="settings-title">Info</div>
                 <div class="settings-item">
@@ -2966,6 +3152,13 @@
         let bleServer = null;
         let ebikeService = null;
 
+        // Properly disconnect before page unload
+        window.addEventListener('beforeunload', () => {
+            if (bleServer && bleServer.connected) {
+                bleServer.disconnect();
+            }
+        });
+
         async function connectBLE() {
             try {
                 // If already connected, disconnect first
@@ -2976,29 +3169,17 @@
 
                 updateBLEStatus('connecting');
 
-                // Try to reconnect to existing device, or request new one
-                if (bleDevice && bleDevice.gatt) {
-                    try {
-                        bleServer = await bleDevice.gatt.connect();
-                    } catch (e) {
-                        // Device no longer available, request new one
-                        bleDevice = null;
-                    }
-                }
+                // Always request a new device - more reliable after page refresh
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [
+                        { name: 'Ebike' },
+                        { namePrefix: 'Ebike' }
+                    ],
+                    optionalServices: [EBIKE_SERVICE_UUID]
+                });
 
-                if (!bleDevice) {
-                    bleDevice = await navigator.bluetooth.requestDevice({
-                        filters: [
-                            { name: 'Ebike' },
-                            { namePrefix: 'Ebike' },
-                            { services: [EBIKE_SERVICE_UUID] }
-                        ],
-                        optionalServices: [EBIKE_SERVICE_UUID]
-                    });
-
-                    bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
-                    bleServer = await bleDevice.gatt.connect();
-                }
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+                bleServer = await bleDevice.gatt.connect();
 
                 ebikeService = await bleServer.getPrimaryService(EBIKE_SERVICE_UUID);
 
@@ -3009,6 +3190,16 @@
 
                 // Read initial lock state from MCU
                 await readLockState();
+
+                // Initialize LED characteristic
+                try {
+                    ledCharacteristic = await ebikeService.getCharacteristic(LED_CHAR_UUID);
+                    console.log('LED characteristic ready');
+                    // Apply saved LED settings after connection
+                    setTimeout(() => applyGradient(), 500);
+                } catch (e) {
+                    console.log('LED characteristic not available:', e);
+                }
 
                 updateBLEStatus('connected');
 
@@ -3029,7 +3220,8 @@
         function cleanupBLE() {
             ebikeService = null;
             bleServer = null;
-            // Keep bleDevice for potential reconnection
+            ledCharacteristic = null;
+            bleDevice = null;  // Clear device - always request fresh
         }
 
         async function subscribeToCharacteristic(uuid, handler) {
@@ -3251,8 +3443,247 @@
             }, 500);
         }
 
+        // ==================== LED RGB CONTROL ====================
+
+        // LED Command IDs (matching STM32 protocol)
+        const CMD_LED_SET_MODE = 17;
+        const CMD_LED_SET_COLOR = 18;
+        const CMD_LED_SET_BRIGHTNESS = 19;
+        const CMD_LED_SET_SPEED = 20;
+        const CMD_LED_OFF = 21;
+        const CMD_LED_GRADIENT_SET_COLOR = 22;
+        const CMD_LED_GRADIENT_SET_COUNT = 23;
+        const CMD_LED_GRADIENT_CLEAR = 24;
+
+        // LED characteristic UUID (add to your nRF service)
+        const LED_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef8';
+
+        let ledCharacteristic = null;
+
+        // Send LED command via BLE
+        async function sendLedCommand(command, param1 = 0, param2 = 0, param3 = 0) {
+            if (!ebikeService) {
+                console.log('BLE not connected, LED command:', command, param1, param2, param3);
+                return;
+            }
+
+            try {
+                if (!ledCharacteristic) {
+                    ledCharacteristic = await ebikeService.getCharacteristic(LED_CHAR_UUID);
+                }
+
+                // Build command packet (simplified - adjust to match your protocol)
+                const buffer = new ArrayBuffer(16);
+                const view = new DataView(buffer);
+                view.setUint8(0, command);
+                view.setUint8(1, param1);
+                view.setInt16(2, param2, true);  // little endian
+                view.setInt32(4, param3, true);  // little endian
+
+                await ledCharacteristic.writeValue(buffer);
+                console.log('LED command sent:', command, param1, param2, param3);
+            } catch (error) {
+                console.error('LED command error:', error);
+            }
+        }
+
+        // Set LED mode
+        function setLedMode() {
+            const mode = parseInt(document.getElementById('ledMode').value);
+            sendLedCommand(CMD_LED_SET_MODE, mode);
+
+            // Show/hide gradient section based on mode
+            const gradientSection = document.getElementById('gradientSection');
+            const solidColorItem = document.getElementById('ledSolidColorItem');
+
+            if (mode === 11) { // Gradient mode
+                gradientSection.style.display = 'block';
+                solidColorItem.style.display = 'none';
+            } else if (mode === 1 || mode === 2 || mode === 9) { // Solid, Breathing, Strobe
+                gradientSection.style.display = 'none';
+                solidColorItem.style.display = 'flex';
+            } else {
+                gradientSection.style.display = 'none';
+                solidColorItem.style.display = 'none';
+            }
+
+            updateLedButtonText();
+            saveLedSettings();
+        }
+
+        // Set LED color (for solid mode)
+        function setLedColor() {
+            const colorHex = document.getElementById('ledColor').value;
+            const color = parseInt(colorHex.substring(1), 16);
+            sendLedCommand(CMD_LED_SET_COLOR, 0, 0, color);
+            saveLedSettings();
+        }
+
+        // Set LED brightness
+        function setLedBrightness() {
+            const brightness = parseInt(document.getElementById('ledBrightness').value);
+            sendLedCommand(CMD_LED_SET_BRIGHTNESS, brightness);
+            saveLedSettings();
+        }
+
+        // Set LED effect speed
+        function setLedSpeed() {
+            const speed = parseInt(document.getElementById('ledSpeed').value);
+            sendLedCommand(CMD_LED_SET_SPEED, speed);
+            saveLedSettings();
+        }
+
+        // Update gradient color count display
+        function updateGradientCount() {
+            const count = parseInt(document.getElementById('gradientCount').value);
+            for (let i = 0; i < 5; i++) {
+                const colorInput = document.getElementById('gradColor' + i);
+                colorInput.style.display = (i < count) ? 'block' : 'none';
+            }
+            saveLedSettings();
+        }
+
+        // Update gradient (called on color change)
+        function updateGradient() {
+            saveLedSettings();
+        }
+
+        // Apply gradient to LED
+        function applyGradient() {
+            const count = parseInt(document.getElementById('gradientCount').value);
+
+            // Clear existing gradient
+            sendLedCommand(CMD_LED_GRADIENT_CLEAR);
+
+            // Small delay between commands
+            setTimeout(() => {
+                // Set each color
+                for (let i = 0; i < count; i++) {
+                    const colorHex = document.getElementById('gradColor' + i).value;
+                    const color = parseInt(colorHex.substring(1), 16);
+
+                    setTimeout(() => {
+                        sendLedCommand(CMD_LED_GRADIENT_SET_COLOR, i, 0, color);
+                    }, i * 50);
+                }
+
+                // Set count and mode after colors are set
+                setTimeout(() => {
+                    sendLedCommand(CMD_LED_GRADIENT_SET_COUNT, count);
+                    setTimeout(() => {
+                        document.getElementById('ledMode').value = '11';
+                        sendLedCommand(CMD_LED_SET_MODE, 11);
+                    }, 50);
+                }, count * 50 + 100);
+            }, 50);
+
+            saveLedSettings();
+        }
+
+        // LED Presets
+        function ledPreset(preset) {
+            const presets = {
+                fire: ['#ff0000', '#ff8000', '#ffff00'],
+                ocean: ['#0000ff', '#00ffff', '#00ff80'],
+                sunset: ['#ff0080', '#ff8000', '#ffff00'],
+                forest: ['#004400', '#00ff00', '#88ff00'],
+                neon: ['#ff00ff', '#00ffff', '#ff00ff']
+            };
+
+            const colors = presets[preset];
+            if (!colors) return;
+
+            // Update UI
+            document.getElementById('gradientCount').value = colors.length;
+            updateGradientCount();
+
+            for (let i = 0; i < colors.length; i++) {
+                document.getElementById('gradColor' + i).value = colors[i];
+            }
+
+            // Apply
+            applyGradient();
+        }
+
+        // Save LED settings to localStorage
+        function saveLedSettings() {
+            const ledSettings = {
+                mode: document.getElementById('ledMode').value,
+                brightness: document.getElementById('ledBrightness').value,
+                speed: document.getElementById('ledSpeed').value,
+                color: document.getElementById('ledColor').value,
+                gradientCount: document.getElementById('gradientCount').value,
+                gradientColors: []
+            };
+
+            for (let i = 0; i < 5; i++) {
+                ledSettings.gradientColors[i] = document.getElementById('gradColor' + i).value;
+            }
+
+            localStorage.setItem('ebikeLedSettings', JSON.stringify(ledSettings));
+        }
+
+        // Load LED settings from localStorage
+        function loadLedSettings() {
+            const saved = localStorage.getItem('ebikeLedSettings');
+            if (saved) {
+                const ledSettings = JSON.parse(saved);
+
+                document.getElementById('ledMode').value = ledSettings.mode || '11';
+                document.getElementById('ledBrightness').value = ledSettings.brightness || 200;
+                document.getElementById('ledSpeed').value = ledSettings.speed || 128;
+                document.getElementById('ledColor').value = ledSettings.color || '#00ffff';
+                document.getElementById('gradientCount').value = ledSettings.gradientCount || 3;
+
+                if (ledSettings.gradientColors) {
+                    for (let i = 0; i < 5; i++) {
+                        if (ledSettings.gradientColors[i]) {
+                            document.getElementById('gradColor' + i).value = ledSettings.gradientColors[i];
+                        }
+                    }
+                }
+
+                updateGradientCount();
+                setLedMode();
+            }
+        }
+
+        // Initialize LED UI on page load
+        function initLedUI() {
+            loadLedSettings();
+            // Default: show gradient section, hide solid color
+            document.getElementById('gradientSection').style.display = 'block';
+            document.getElementById('ledSolidColorItem').style.display = 'none';
+            updateLedButtonText();
+        }
+
+        // Update LED quick button text
+        function updateLedButtonText() {
+            const mode = parseInt(document.getElementById('ledMode').value);
+            const modeNames = {
+                0: 'off', 1: 'solid', 2: 'breath', 3: 'rainbow',
+                4: 'gear', 5: 'cadence', 6: 'speed', 9: 'strobe',
+                10: 'candle', 11: 'gradient'
+            };
+            document.getElementById('ledModeText').textContent = modeNames[mode] || 'led';
+        }
+
+        // Cycle through LED modes with quick button
+        function cycleLedMode() {
+            const modes = [0, 11, 3, 2, 1, 4, 5, 6];  // Off, Gradient, Rainbow, Breathing, Solid, Gear, Cadence, Speed
+            const currentMode = parseInt(document.getElementById('ledMode').value);
+            const currentIndex = modes.indexOf(currentMode);
+            const nextIndex = (currentIndex + 1) % modes.length;
+            const nextMode = modes[nextIndex];
+
+            document.getElementById('ledMode').value = nextMode;
+            setLedMode();
+            updateLedButtonText();
+        }
+
         // ==================== START ====================
         init();
+        initLedUI();
         runSimulation();
 
         // ==================== SERVICE WORKER ====================
